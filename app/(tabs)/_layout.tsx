@@ -16,7 +16,7 @@ export default function TabLayout() {
         headerLeft: () => (
           <View style={styles.headerLogoContainer}>
             <Image
-              source={{ uri: 'https://rork.app/pa/6g6ixd11m2bjzy28nn7jh/logo' }}
+              source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/6et2v32sviqr9mrtxo9gt' }}
               style={styles.headerLogo}
               resizeMode="contain"
             />

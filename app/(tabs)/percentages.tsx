@@ -116,7 +116,6 @@ export default function PercentagesScreen() {
                 ]}
               />
             </View>
-            <Text style={styles.percentageFormula}>Total Bills ÷ Income</Text>
           </View>
 
           <View style={[styles.percentageCard, { backgroundColor: '#E8F5E9' }]}>
@@ -140,9 +139,6 @@ export default function PercentagesScreen() {
                 ]}
               />
             </View>
-            <Text style={styles.percentageFormula}>
-              (Income - Bills) × {(percentages.spendMultiplier * 100).toFixed(0)}% ÷ Income
-            </Text>
           </View>
 
           <View style={[styles.percentageCard, { backgroundColor: '#E3F2FD' }]}>
@@ -166,9 +162,6 @@ export default function PercentagesScreen() {
                 ]}
               />
             </View>
-            <Text style={styles.percentageFormula}>
-              (Income - Bills) × {(percentages.savingsMultiplier * 100).toFixed(0)}% ÷ Income
-            </Text>
           </View>
         </View>
 
