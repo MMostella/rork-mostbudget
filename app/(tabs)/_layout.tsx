@@ -1,7 +1,7 @@
-import { Tabs } from "expo-router";
-import { ClipboardList, DollarSign, Home, PieChart, Receipt, Settings } from "lucide-react-native";
+import { Tabs, router } from "expo-router";
+import { ClipboardList, DollarSign, HelpCircle, Home, PieChart, Receipt, Settings } from "lucide-react-native";
 import React from "react";
-import { Image, StyleSheet, View } from "react-native";
+import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
 
 import Colors from "@/constants/colors";
 
@@ -21,6 +21,14 @@ export default function TabLayout() {
               resizeMode="contain"
             />
           </View>
+        ),
+        headerRight: () => (
+          <TouchableOpacity
+            onPress={() => router.push('/get-started')}
+            style={styles.helpButton}
+          >
+            <HelpCircle size={24} color={Colors.light.tint} />
+          </TouchableOpacity>
         ),
       }}
     >
@@ -66,13 +74,18 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   headerLogoContainer: {
-    height: 40,
+    height: 44,
+    width: 160,
     justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 8,
+    alignItems: 'flex-start',
+    marginLeft: 12,
   },
   headerLogo: {
-    height: 40,
-    width: 200,
+    height: 44,
+    width: 160,
+  },
+  helpButton: {
+    marginRight: 16,
+    padding: 4,
   },
 });
