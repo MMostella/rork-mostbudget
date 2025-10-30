@@ -4,11 +4,8 @@ import React from "react";
 import { Image, StyleSheet, View } from "react-native";
 
 import Colors from "@/constants/colors";
-import { useAppConfig } from "@/contexts/AppConfigContext";
 
 export default function TabLayout() {
-  const { config } = useAppConfig();
-
   return (
     <Tabs
       screenOptions={{
@@ -18,17 +15,8 @@ export default function TabLayout() {
         headerTitle: () => (
           <View style={styles.headerLogoContainer}>
             <Image
-              source={{ uri: config.appLogoURL }}
+              source={{ uri: 'https://rork.app/pa/6g6ixd11m2bjzy28nn7jh/logo' }}
               style={styles.headerLogo}
-              resizeMode="contain"
-            />
-          </View>
-        ),
-        headerLeft: () => (
-          <View style={styles.headerLeftLogoContainer}>
-            <Image
-              source={{ uri: config.appLogoURL }}
-              style={styles.headerLeftLogo}
               resizeMode="contain"
             />
           </View>
@@ -84,15 +72,5 @@ const styles = StyleSheet.create({
   headerLogo: {
     height: 40,
     width: 120,
-  },
-  headerLeftLogoContainer: {
-    height: 36,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 16,
-  },
-  headerLeftLogo: {
-    height: 36,
-    width: 100,
   },
 });

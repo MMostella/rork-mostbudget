@@ -1,8 +1,7 @@
 import Colors from '@/constants/colors';
 import { useBudget } from '@/contexts/BudgetContext';
-import { useAppConfig } from '@/contexts/AppConfigContext';
 import type { HouseholdMember } from '@/types/budget';
-import { Edit, Plus, RefreshCw, Settings as SettingsIcon, Trash2, Users } from 'lucide-react-native';
+import { Edit, Plus, Settings as SettingsIcon, Trash2, Users } from 'lucide-react-native';
 import { useRef, useState } from 'react';
 import {
   Alert,
@@ -21,7 +20,6 @@ import {
 
 export default function SettingsScreen() {
   const { settings, updateSettings, currentSpendingTotal, currentSavingsTotal, setSpendingOrSavingsTotal, householdMembers, addHouseholdMember, updateHouseholdMember, deleteHouseholdMember } = useBudget();
-  const { config, lastFetchTime, refetchConfig, isLoading: configLoading } = useAppConfig();
   const [tithePercentageText, setTithePercentageText] = useState(
     settings.tithePercentage.toString()
   );
@@ -177,10 +175,8 @@ export default function SettingsScreen() {
           </Text>
         </View>
 
-        {config.featureTithes && (
-          <>
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Tithing</Text>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Tithing</Text>
 
           <View style={styles.settingCard}>
             <View style={styles.settingRow}>
@@ -224,16 +220,14 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-            <View style={styles.infoCard}>
-              <Text style={styles.infoTitle}>How Tithe Works</Text>
-              <Text style={styles.infoText}>
-                When enabled, the tithe amount will be automatically calculated and shown as an
-                expense when you log a paycheck. The tithe is calculated before other expenses
-                are paid.
-              </Text>
-            </View>
-          </>
-        )}
+        <View style={styles.infoCard}>
+          <Text style={styles.infoTitle}>How Tithe Works</Text>
+          <Text style={styles.infoText}>
+            When enabled, the tithe amount will be automatically calculated and shown as an
+            expense when you log a paycheck. The tithe is calculated before other expenses
+            are paid.
+          </Text>
+        </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Manual Adjustments</Text>
@@ -264,56 +258,6 @@ export default function SettingsScreen() {
               <Text style={styles.deductButtonText}>Adjust Totals</Text>
             </Pressable>
           </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>App Configuration</Text>
-
-          <View style={styles.settingCard}>
-            <Text style={styles.settingLabel}>Remote Configuration</Text>
-            <Text style={styles.settingDescription}>
-              App settings are managed remotely for easier updates
-            </Text>
-
-            <View style={styles.configInfo}>
-              <View style={styles.configRow}>
-                <Text style={styles.configLabel}>App Version:</Text>
-                <Text style={styles.configValue}>{config.appVersion}</Text>
-              </View>
-              <View style={styles.configRow}>
-                <Text style={styles.configLabel}>Tithing Feature:</Text>
-                <Text style={[styles.configValue, { color: config.featureTithes ? Colors.light.success : Colors.light.danger }]}>
-                  {config.featureTithes ? 'Enabled' : 'Disabled'}
-                </Text>
-              </View>
-              <View style={styles.configRow}>
-                <Text style={styles.configLabel}>Last Updated:</Text>
-                <Text style={styles.configValue}>
-                  {lastFetchTime ? new Date(lastFetchTime).toLocaleString() : 'Never'}
-                </Text>
-              </View>
-            </View>
-
-            <Pressable
-              style={[styles.deductButton, configLoading && styles.deductButtonDisabled]}
-              onPress={refetchConfig}
-              disabled={configLoading}
-            >
-              <View style={styles.refreshButtonContent}>
-                <RefreshCw size={18} color="#FFFFFF" />
-                <Text style={styles.deductButtonText}>
-                  {configLoading ? 'Refreshing...' : 'Refresh Configuration'}
-                </Text>
-              </View>
-            </Pressable>
-          </View>
-        </View>
-
-        <View style={styles.infoCard}>
-          <Text style={styles.infoTitle}>What is App Configuration?</Text>
-          <Text style={styles.infoText}>
-            App configuration is managed remotely via Google Sheets. This allows for easy updates to app settings without requiring an app update. Features can be toggled on or off, default values can be changed, and the app logo can be updated.
-          </Text>
         </View>
       </ScrollView>
 
@@ -585,7 +529,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginTop: 8,
-    marginBottom: 24,
   },
   infoTitle: {
     fontSize: 14,
@@ -807,36 +750,5 @@ const styles = StyleSheet.create({
   },
   householdActionButton: {
     padding: 4,
-  },
-  configInfo: {
-    marginTop: 16,
-    gap: 12,
-  },
-  configRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: Colors.light.background,
-    borderRadius: 8,
-  },
-  configLabel: {
-    fontSize: 14,
-    color: Colors.light.textSecondary,
-    fontWeight: '600' as const,
-  },
-  configValue: {
-    fontSize: 14,
-    color: Colors.light.text,
-    fontWeight: '600' as const,
-  },
-  deductButtonDisabled: {
-    opacity: 0.6,
-  },
-  refreshButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
   },
 });
