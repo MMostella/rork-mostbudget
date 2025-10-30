@@ -10,5 +10,12 @@
         "RCT_NEW_ARCH_ENABLED": "0"
       }
     }
-  }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "your-apple-id@email.com"
+        }
+      }
+    }
 }
