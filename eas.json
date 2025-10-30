@@ -2,7 +2,8 @@
   "build": {
     "production": {
       "env": {
-        "RCT_NEW_ARCH_ENABLED": "0"
+        "RCT_NEW_ARCH_ENABLED": "0",
+        "EXPO_NO_HERMES": "1"
       },
       "releaseChannel": "production",
       "distribution": "store"
