@@ -121,7 +121,62 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Tithe Settings</Text>
+          <Text style={styles.sectionTitle}>Household Members</Text>
+
+          <View style={styles.settingCard}>
+            <View style={styles.householdHeader}>
+              <View style={styles.householdHeaderLeft}>
+                <Users size={20} color={Colors.light.tint} />
+                <Text style={styles.settingLabel}>Manage household members</Text>
+              </View>
+              <Pressable
+                style={styles.addHouseholdButton}
+                onPress={() => setHouseholdModalVisible(true)}
+              >
+                <Plus size={20} color={Colors.light.tint} />
+              </Pressable>
+            </View>
+            {householdMembers.length === 0 ? (
+              <Text style={styles.emptyHouseholdText}>No household members added</Text>
+            ) : (
+              <View style={styles.householdList}>
+                {householdMembers.map((member) => (
+                  <View key={member.id} style={styles.householdMemberRow}>
+                    <Text style={styles.householdMemberName}>{member.name}</Text>
+                    <View style={styles.householdActions}>
+                      <Pressable
+                        style={styles.householdActionButton}
+                        onPress={() => {
+                          setEditingHouseholdMember(member);
+                          setHouseholdName(member.name);
+                          setHouseholdModalVisible(true);
+                        }}
+                      >
+                        <Edit size={18} color={Colors.light.tint} />
+                      </Pressable>
+                      <Pressable
+                        style={styles.householdActionButton}
+                        onPress={() => handleDeleteHouseholdMember(member.id, member.name)}
+                      >
+                        <Trash2 size={18} color={Colors.light.danger} />
+                      </Pressable>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+        </View>
+
+        <View style={styles.infoCard}>
+          <Text style={styles.infoTitle}>How It Works</Text>
+          <Text style={styles.infoText}>
+            Add household members who earn income. You can assign paychecks and expenses to help track who contributes to the budget. This helps you manage shared finances and see individual contributions.
+          </Text>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Tithing</Text>
 
           <View style={styles.settingCard}>
             <View style={styles.settingRow}>
@@ -172,54 +227,6 @@ export default function SettingsScreen() {
             expense when you log a paycheck. The tithe is calculated before other expenses
             are paid.
           </Text>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Household Members</Text>
-
-          <View style={styles.settingCard}>
-            <View style={styles.householdHeader}>
-              <View style={styles.householdHeaderLeft}>
-                <Users size={20} color={Colors.light.tint} />
-                <Text style={styles.settingLabel}>Manage household members</Text>
-              </View>
-              <Pressable
-                style={styles.addHouseholdButton}
-                onPress={() => setHouseholdModalVisible(true)}
-              >
-                <Plus size={20} color={Colors.light.tint} />
-              </Pressable>
-            </View>
-            {householdMembers.length === 0 ? (
-              <Text style={styles.emptyHouseholdText}>No household members added</Text>
-            ) : (
-              <View style={styles.householdList}>
-                {householdMembers.map((member) => (
-                  <View key={member.id} style={styles.householdMemberRow}>
-                    <Text style={styles.householdMemberName}>{member.name}</Text>
-                    <View style={styles.householdActions}>
-                      <Pressable
-                        style={styles.householdActionButton}
-                        onPress={() => {
-                          setEditingHouseholdMember(member);
-                          setHouseholdName(member.name);
-                          setHouseholdModalVisible(true);
-                        }}
-                      >
-                        <Edit size={18} color={Colors.light.tint} />
-                      </Pressable>
-                      <Pressable
-                        style={styles.householdActionButton}
-                        onPress={() => handleDeleteHouseholdMember(member.id, member.name)}
-                      >
-                        <Trash2 size={18} color={Colors.light.danger} />
-                      </Pressable>
-                    </View>
-                  </View>
-                ))}
-              </View>
-            )}
-          </View>
         </View>
 
         <View style={styles.section}>
