@@ -12,7 +12,8 @@ export default function TabLayout() {
         tabBarActiveTintColor: Colors.light.tint,
         headerShown: true,
         tabBarShowLabel: false,
-        headerTitle: () => (
+        headerTitle: "",
+        headerLeft: () => (
           <View style={styles.headerLogoContainer}>
             <Image
               source={{ uri: 'https://rork.app/pa/6g6ixd11m2bjzy28nn7jh/logo' }}
@@ -68,9 +69,10 @@ const styles = StyleSheet.create({
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
+    marginLeft: 8,
   },
   headerLogo: {
     height: 40,
-    width: 120,
+    width: 200,
   },
 });

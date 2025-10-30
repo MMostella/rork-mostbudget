@@ -529,6 +529,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginTop: 8,
+    marginBottom: 24,
   },
   infoTitle: {
     fontSize: 14,
