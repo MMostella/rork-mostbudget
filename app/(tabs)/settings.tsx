@@ -1,8 +1,7 @@
 import Colors from '@/constants/colors';
 import { useBudget } from '@/contexts/BudgetContext';
-import { useAppConfig } from '@/contexts/AppConfigContext';
 import type { HouseholdMember } from '@/types/budget';
-import { Edit, Plus, RefreshCw, Trash2, Users } from 'lucide-react-native';
+import { Edit, Plus, Settings as SettingsIcon, Trash2, Users } from 'lucide-react-native';
 import { useRef, useState } from 'react';
 import {
   Alert,
@@ -20,9 +19,7 @@ import {
 } from 'react-native';
 
 export default function SettingsScreen() {
-  const { config, refreshConfig, lastFetchTime } = useAppConfig();
   const { settings, updateSettings, currentSpendingTotal, currentSavingsTotal, setSpendingOrSavingsTotal, householdMembers, addHouseholdMember, updateHouseholdMember, deleteHouseholdMember } = useBudget();
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [tithePercentageText, setTithePercentageText] = useState(
     settings.tithePercentage.toString()
   );
@@ -114,137 +111,116 @@ export default function SettingsScreen() {
     ]);
   };
 
-  const handleRefreshConfig = async () => {
-    setIsRefreshing(true);
-    await refreshConfig();
-    setIsRefreshing(false);
-    Alert.alert('Config Refreshed', 'App configuration has been updated from the server.');
-  };
-
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
+          <SettingsIcon size={32} color={Colors.light.tint} />
           <Text style={styles.headerTitle}>Settings</Text>
-          <Text style={styles.headerDescription}>Manage your budget preferences and household</Text>
+          <Text style={styles.headerSubtitle}>Customize your budget preferences</Text>
         </View>
 
-        {config.featureHouseholdMembers && (
-          <>
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Household Members</Text>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Tithe Settings</Text>
 
-              <View style={styles.settingCard}>
-                <View style={styles.householdHeader}>
-                  <View style={styles.householdHeaderLeft}>
-                    <Users size={20} color={Colors.light.tint} />
-                    <Text style={styles.settingLabel}>Manage household members</Text>
-                  </View>
-                  <Pressable
-                    style={styles.addHouseholdButton}
-                    onPress={() => setHouseholdModalVisible(true)}
-                  >
-                    <Plus size={20} color={Colors.light.tint} />
-                  </Pressable>
-                </View>
-                {householdMembers.length === 0 ? (
-                  <Text style={styles.emptyHouseholdText}>No household members added</Text>
-                ) : (
-                  <View style={styles.householdList}>
-                    {householdMembers.map((member) => (
-                      <View key={member.id} style={styles.householdMemberRow}>
-                        <Text style={styles.householdMemberName}>{member.name}</Text>
-                        <View style={styles.householdActions}>
-                          <Pressable
-                            style={styles.householdActionButton}
-                            onPress={() => {
-                              setEditingHouseholdMember(member);
-                              setHouseholdName(member.name);
-                              setHouseholdModalVisible(true);
-                            }}
-                          >
-                            <Edit size={18} color={Colors.light.tint} />
-                          </Pressable>
-                          <Pressable
-                            style={styles.householdActionButton}
-                            onPress={() => handleDeleteHouseholdMember(member.id, member.name)}
-                          >
-                            <Trash2 size={18} color={Colors.light.danger} />
-                          </Pressable>
-                        </View>
-                      </View>
-                    ))}
-                  </View>
-                )}
+          <View style={styles.settingCard}>
+            <View style={styles.settingRow}>
+              <View style={styles.settingInfo}>
+                <Text style={styles.settingLabel}>Enable Tithe</Text>
+                <Text style={styles.settingDescription}>
+                  Automatically calculate tithe from paychecks
+                </Text>
               </View>
+              <Switch
+                value={settings.titheEnabled}
+                onValueChange={handleTitheToggle}
+                trackColor={{
+                  false: Colors.light.border,
+                  true: Colors.light.tint,
+                }}
+                thumbColor="#FFFFFF"
+              />
             </View>
 
-            <View style={styles.infoCard}>
-              <Text style={styles.infoTitle}>How Household Members Work</Text>
-              <Text style={styles.infoText}>
-                Add household members who earn income. You can assign paychecks and expenses to help track who contributes to the budget. This helps you manage shared finances and see individual contributions.
-              </Text>
-            </View>
-          </>
-        )}
-
-        {config.featureTithes && (
-          <>
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Tithing</Text>
-
-              <View style={styles.settingCard}>
-                <View style={styles.settingRow}>
-                  <View style={styles.settingInfo}>
-                    <Text style={styles.settingLabel}>Enable Tithe</Text>
-                    <Text style={styles.settingDescription}>
-                      Automatically calculate tithe from paychecks
-                    </Text>
-                  </View>
-                  <Switch
-                    value={settings.titheEnabled}
-                    onValueChange={handleTitheToggle}
-                    trackColor={{
-                      false: Colors.light.border,
-                      true: Colors.light.tint,
-                    }}
-                    thumbColor="#FFFFFF"
+            {settings.titheEnabled && (
+              <View style={styles.percentageContainer}>
+                <Text style={styles.percentageLabel}>Tithe Percentage</Text>
+                <View style={styles.percentageInputWrapper}>
+                  <TextInput
+                    style={styles.percentageInput}
+                    value={tithePercentageText}
+                    onChangeText={handleTithePercentageChange}
+                    onBlur={handleTithePercentageBlur}
+                    keyboardType="decimal-pad"
+                    placeholder="10"
+                    maxLength={5}
                   />
+                  <Text style={styles.percentageSymbol}>%</Text>
                 </View>
-
-                {settings.titheEnabled && (
-                  <View style={styles.percentageContainer}>
-                    <Text style={styles.percentageLabel}>Tithe Percentage</Text>
-                    <View style={styles.percentageInputWrapper}>
-                      <TextInput
-                        style={styles.percentageInput}
-                        value={tithePercentageText}
-                        onChangeText={handleTithePercentageChange}
-                        onBlur={handleTithePercentageBlur}
-                        keyboardType="decimal-pad"
-                        placeholder="10"
-                        maxLength={5}
-                      />
-                      <Text style={styles.percentageSymbol}>%</Text>
-                    </View>
-                    <Text style={styles.percentageHint}>
-                      {settings.tithePercentage}% of each paycheck will be set aside for tithe
-                    </Text>
-                  </View>
-                )}
+                <Text style={styles.percentageHint}>
+                  {settings.tithePercentage}% of each paycheck will be set aside for tithe
+                </Text>
               </View>
-            </View>
+            )}
+          </View>
+        </View>
 
-            <View style={styles.infoCard}>
-              <Text style={styles.infoTitle}>How Tithe Works</Text>
-              <Text style={styles.infoText}>
-                When enabled, the tithe amount will be automatically calculated and shown as an
-                expense when you log a paycheck. The tithe is calculated before other expenses
-                are paid.
-              </Text>
+        <View style={styles.infoCard}>
+          <Text style={styles.infoTitle}>How Tithe Works</Text>
+          <Text style={styles.infoText}>
+            When enabled, the tithe amount will be automatically calculated and shown as an
+            expense when you log a paycheck. The tithe is calculated before other expenses
+            are paid.
+          </Text>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Household Members</Text>
+
+          <View style={styles.settingCard}>
+            <View style={styles.householdHeader}>
+              <View style={styles.householdHeaderLeft}>
+                <Users size={20} color={Colors.light.tint} />
+                <Text style={styles.settingLabel}>Manage household members</Text>
+              </View>
+              <Pressable
+                style={styles.addHouseholdButton}
+                onPress={() => setHouseholdModalVisible(true)}
+              >
+                <Plus size={20} color={Colors.light.tint} />
+              </Pressable>
             </View>
-          </>
-        )}
+            {householdMembers.length === 0 ? (
+              <Text style={styles.emptyHouseholdText}>No household members added</Text>
+            ) : (
+              <View style={styles.householdList}>
+                {householdMembers.map((member) => (
+                  <View key={member.id} style={styles.householdMemberRow}>
+                    <Text style={styles.householdMemberName}>{member.name}</Text>
+                    <View style={styles.householdActions}>
+                      <Pressable
+                        style={styles.householdActionButton}
+                        onPress={() => {
+                          setEditingHouseholdMember(member);
+                          setHouseholdName(member.name);
+                          setHouseholdModalVisible(true);
+                        }}
+                      >
+                        <Edit size={18} color={Colors.light.tint} />
+                      </Pressable>
+                      <Pressable
+                        style={styles.householdActionButton}
+                        onPress={() => handleDeleteHouseholdMember(member.id, member.name)}
+                      >
+                        <Trash2 size={18} color={Colors.light.danger} />
+                      </Pressable>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+        </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Manual Adjustments</Text>
@@ -273,18 +249,6 @@ export default function SettingsScreen() {
               onPress={() => setAdjustModalVisible(true)}
             >
               <Text style={styles.deductButtonText}>Adjust Totals</Text>
-            </Pressable>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>App Configuration</Text>
-          <View style={styles.settingCard}>
-            <Text style={styles.settingLabel}>Version: {config.appVersion}</Text>
-            <Text style={styles.settingDescription}>Last synced: {lastFetchTime ? new Date(lastFetchTime).toLocaleString() : 'Never'}</Text>
-            <Pressable style={[styles.deductButton, styles.refreshButton, isRefreshing && styles.deductButtonDisabled]} onPress={handleRefreshConfig} disabled={isRefreshing}>
-              <RefreshCw size={16} color="#FFFFFF" />
-              <Text style={styles.deductButtonText}>{isRefreshing ? 'Refreshing...' : 'Refresh Config'}</Text>
             </Pressable>
           </View>
         </View>
@@ -466,18 +430,16 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     paddingTop: 20,
   },
-
   headerTitle: {
     fontSize: 28,
     fontWeight: '700' as const,
     color: Colors.light.text,
-    marginBottom: 8,
+    marginTop: 12,
   },
-  headerDescription: {
-    fontSize: 15,
+  headerSubtitle: {
+    fontSize: 14,
     color: Colors.light.textSecondary,
-    textAlign: 'center',
-    paddingHorizontal: 20,
+    marginTop: 4,
   },
   section: {
     marginBottom: 24,
@@ -560,7 +522,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginTop: 8,
-    marginBottom: 16,
   },
   infoTitle: {
     fontSize: 14,
@@ -601,12 +562,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 14,
     alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  deductButtonDisabled: {
-    opacity: 0.5,
   },
   deductButtonText: {
     fontSize: 15,
@@ -788,8 +743,5 @@ const styles = StyleSheet.create({
   },
   householdActionButton: {
     padding: 4,
-  },
-  refreshButton: {
-    marginTop: 16,
   },
 });

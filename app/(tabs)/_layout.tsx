@@ -1,38 +1,15 @@
-import { Tabs, useRouter } from "expo-router";
-import { ClipboardList, DollarSign, HelpCircle, Home, PieChart, Receipt, Settings } from "lucide-react-native";
+import { Tabs } from "expo-router";
+import { ClipboardList, DollarSign, Home, PieChart, Receipt, Settings } from "lucide-react-native";
 import React from "react";
-import { Image, Pressable, StyleSheet, View } from "react-native";
 
 import Colors from "@/constants/colors";
-import { useAppConfig } from "@/contexts/AppConfigContext";
 
 export default function TabLayout() {
-  const { config } = useAppConfig();
-  const router = useRouter();
-
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors.light.tint,
         headerShown: true,
-        tabBarShowLabel: false,
-        headerTitle: () => (
-          <View style={styles.headerLogoContainer}>
-            <Image
-              source={{ uri: config.appLogoURL }}
-              style={styles.headerLogo}
-              resizeMode="contain"
-            />
-          </View>
-        ),
-        headerRight: () => (
-          <Pressable
-            style={styles.helpButton}
-            onPress={() => router.push('/guide')}
-          >
-            <HelpCircle size={24} color={Colors.light.tint} />
-          </Pressable>
-        ),
       }}
     >
       <Tabs.Screen
@@ -80,23 +57,3 @@ export default function TabLayout() {
     </Tabs>
   );
 }
-
-const styles = StyleSheet.create({
-  headerLogoContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerLogo: {
-    height: 40,
-    width: 200,
-  },
-  helpButton: {
-    marginRight: 16,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

@@ -2,7 +2,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { BudgetSummary, BudgetPercentages, ExpenseItem, Income, Paycheck, AppSettings, DailyExpense, HouseholdMember } from '@/types/budget';
-import { useAppConfig } from '@/contexts/AppConfigContext';
 
 const STORAGE_KEYS = {
   INCOME: '@budget_income',
@@ -17,12 +16,11 @@ const STORAGE_KEYS = {
 };
 
 export const [BudgetProvider, useBudget] = createContextHook(() => {
-  const { config } = useAppConfig();
   const [income, setIncome] = useState<Income[]>([]);
   const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
   const [paychecks, setPaychecks] = useState<Paycheck[]>([]);
-  const [spendMultiplier, setSpendMultiplier] = useState(config.spendingPercentDefault);
-  const [savingsMultiplier, setSavingsMultiplier] = useState(config.savingPercentDefault);
+  const [spendMultiplier, setSpendMultiplier] = useState(0.6);
+  const [savingsMultiplier, setSavingsMultiplier] = useState(0.4);
   const [settings, setSettings] = useState<AppSettings>({
     titheEnabled: false,
     tithePercentage: 10,
@@ -56,8 +54,8 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
       if (paychecksData) setPaychecks(JSON.parse(paychecksData));
       if (percentagesData) {
         const parsed = JSON.parse(percentagesData);
-        setSpendMultiplier(parsed.spendMultiplier ?? config.spendingPercentDefault);
-        setSavingsMultiplier(parsed.savingsMultiplier ?? config.savingPercentDefault);
+        setSpendMultiplier(parsed.spendMultiplier ?? 0.6);
+        setSavingsMultiplier(parsed.savingsMultiplier ?? 0.4);
       }
       if (settingsData) {
         const parsed = JSON.parse(settingsData);

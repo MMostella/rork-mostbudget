@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "MostBudget",
-    "slug": "most-budget",
-    "version": "1.1.0",
+    "name": "My Personal Budget App",
+    "slug": "my-personal-budget-app",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
@@ -15,14 +15,14 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.rork.budget-most"
+      "bundleIdentifier": "app.rork.my-personal-budget-app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "app.rork.budget_most"
+      "package": "app.rork.my_personal_budget_app"
     },
     "web": {
       "favicon": "./assets/images/favicon.png"
