@@ -5,6 +5,10 @@
         "RCT_NEW_ARCH_ENABLED": "0",
         "EXPO_NO_HERMES": "1"
       },
+      "node": {
+        "version": "18.18.0",
+        "packageManager": "npm"
+      },
       "releaseChannel": "production",
       "distribution": "store"
     },
@@ -16,6 +20,10 @@
     "development": {
       "env": {
         "RCT_NEW_ARCH_ENABLED": "0"
+      },
+      "node": {
+        "version": "18.18.0",
+        "packageManager": "npm"
       }
     },
     "default": {
