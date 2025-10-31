@@ -213,50 +213,46 @@ export default function SetupScreen() {
               <Plus size={20} color={Colors.light.tint} />
             </Pressable>
           </View>
-          {income.length === 0 ? (
-            <Text style={styles.emptyText}>No income sources added</Text>
-          ) : (
-            <View style={styles.list}>
-              {income.map((item) => (
-                <View key={item.id} style={styles.itemCard}>
-                  <View style={styles.itemInfo}>
-                    <Text style={styles.itemName}>{item.name}</Text>
-                    <Text style={styles.itemMeta}>
-                      Monthly total{item.usedForBills === false ? ' • Extra Income (not used for bills)' : ''}{item.householdMemberId ? (() => {
-                        const member = householdMembers.find(m => m.id === item.householdMemberId);
-                        return member ? ` • ${member.name}` : '';
-                      })() : ''}
-                    </Text>
-                  </View>
-                  <View style={styles.itemRight}>
-                    <Text style={[styles.itemAmount, { color: Colors.light.income }]}>
-                      ${item.amount.toFixed(2)}
-                    </Text>
-                    <Pressable
-                      style={styles.deleteButton}
-                      onPress={() => {
-                        setEditingItem(item);
-                        setIncomeName(item.name);
-                        setIncomeAmount(item.amount.toString());
-                        setIncomeFrequency('monthly');
-                        setIncomeHouseholdMemberId(item.householdMemberId);
-                        setIncomeUsedForBills(item.usedForBills ?? true);
-                        setModalType('edit-income');
-                      }}
-                    >
-                      <Edit size={18} color={Colors.light.tint} />
-                    </Pressable>
-                    <Pressable
-                      style={styles.deleteButton}
-                      onPress={() => handleDeleteIncome(item.id, item.name)}
-                    >
-                      <Trash2 size={18} color={Colors.light.danger} />
-                    </Pressable>
-                  </View>
+          <View style={styles.list}>
+            {income.map((item) => (
+              <View key={item.id} style={styles.itemCard}>
+                <View style={styles.itemInfo}>
+                  <Text style={styles.itemName}>{item.name}</Text>
+                  <Text style={styles.itemMeta}>
+                    Monthly total{item.usedForBills === false ? ' • Extra Income (not used for bills)' : ''}{item.householdMemberId ? (() => {
+                      const member = householdMembers.find(m => m.id === item.householdMemberId);
+                      return member ? ` • ${member.name}` : '';
+                    })() : ''}
+                  </Text>
                 </View>
-              ))}
-            </View>
-          )}
+                <View style={styles.itemRight}>
+                  <Text style={[styles.itemAmount, { color: Colors.light.income }]}>
+                    ${item.amount.toFixed(2)}
+                  </Text>
+                  <Pressable
+                    style={styles.deleteButton}
+                    onPress={() => {
+                      setEditingItem(item);
+                      setIncomeName(item.name);
+                      setIncomeAmount(item.amount.toString());
+                      setIncomeFrequency('monthly');
+                      setIncomeHouseholdMemberId(item.householdMemberId);
+                      setIncomeUsedForBills(item.usedForBills ?? true);
+                      setModalType('edit-income');
+                    }}
+                  >
+                    <Edit size={18} color={Colors.light.tint} />
+                  </Pressable>
+                  <Pressable
+                    style={styles.deleteButton}
+                    onPress={() => handleDeleteIncome(item.id, item.name)}
+                  >
+                    <Trash2 size={18} color={Colors.light.danger} />
+                  </Pressable>
+                </View>
+              </View>
+            ))}
+          </View>
         </View>
 
         <View style={styles.section}>
@@ -269,61 +265,57 @@ export default function SetupScreen() {
               <Plus size={20} color={Colors.light.tint} />
             </Pressable>
           </View>
-          {expenses.length === 0 ? (
-            <Text style={styles.emptyText}>No expenses added</Text>
-          ) : (
-            <View style={styles.list}>
-              {expenses
-                .sort((a, b) => {
-                  if (a.dueDay && b.dueDay) return a.dueDay - b.dueDay;
-                  if (a.dueDay) return -1;
-                  if (b.dueDay) return 1;
-                  return a.name.localeCompare(b.name);
-                })
-                .map((expense) => (
-                  <View key={expense.id} style={styles.itemCard}>
-                    <View style={styles.itemInfo}>
-                      <Text style={styles.itemName}>{expense.name}</Text>
-                      <Text style={styles.itemMeta}>
-                        {expense.category}{expense.dueDay ? ` • Due: Day ${expense.dueDay}` : ''}{expense.householdMemberId ? (() => {
-                          const member = householdMembers.find(m => m.id === expense.householdMemberId);
-                          return member ? ` • ${member.name}` : '';
-                        })() : ''}
-                      </Text>
-                      {expense.description && (
-                        <Text style={styles.itemDescription}>{expense.description}</Text>
-                      )}
-                    </View>
-                    <View style={styles.itemRight}>
-                      <Text style={[styles.itemAmount, { color: Colors.light.bills }]}>
-                        ${expense.amount.toFixed(2)}
-                      </Text>
-                      <Pressable
-                        style={styles.deleteButton}
-                        onPress={() => {
-                          setEditingItem(expense);
-                          setExpenseName(expense.name);
-                          setExpenseAmount(expense.amount.toString());
-                          setExpenseDueDay(expense.dueDay?.toString() || '');
-                          setExpenseCategory(expense.category);
-                          setExpenseDescription(expense.description || '');
-                          setExpenseHouseholdMemberId(expense.householdMemberId);
-                          setModalType('edit-expense');
-                        }}
-                      >
-                        <Edit size={18} color={Colors.light.tint} />
-                      </Pressable>
-                      <Pressable
-                        style={styles.deleteButton}
-                        onPress={() => handleDeleteExpense(expense.id, expense.name)}
-                      >
-                        <Trash2 size={18} color={Colors.light.danger} />
-                      </Pressable>
-                    </View>
+          <View style={styles.list}>
+            {expenses
+              .sort((a, b) => {
+                if (a.dueDay && b.dueDay) return a.dueDay - b.dueDay;
+                if (a.dueDay) return -1;
+                if (b.dueDay) return 1;
+                return a.name.localeCompare(b.name);
+              })
+              .map((expense) => (
+                <View key={expense.id} style={styles.itemCard}>
+                  <View style={styles.itemInfo}>
+                    <Text style={styles.itemName}>{expense.name}</Text>
+                    <Text style={styles.itemMeta}>
+                      {expense.category}{expense.dueDay ? ` • Due: Day ${expense.dueDay}` : ''}{expense.householdMemberId ? (() => {
+                        const member = householdMembers.find(m => m.id === expense.householdMemberId);
+                        return member ? ` • ${member.name}` : '';
+                      })() : ''}
+                    </Text>
+                    {expense.description && (
+                      <Text style={styles.itemDescription}>{expense.description}</Text>
+                    )}
                   </View>
-                ))}
-            </View>
-          )}
+                  <View style={styles.itemRight}>
+                    <Text style={[styles.itemAmount, { color: Colors.light.bills }]}>
+                      ${expense.amount.toFixed(2)}
+                    </Text>
+                    <Pressable
+                      style={styles.deleteButton}
+                      onPress={() => {
+                        setEditingItem(expense);
+                        setExpenseName(expense.name);
+                        setExpenseAmount(expense.amount.toString());
+                        setExpenseDueDay(expense.dueDay?.toString() || '');
+                        setExpenseCategory(expense.category);
+                        setExpenseDescription(expense.description || '');
+                        setExpenseHouseholdMemberId(expense.householdMemberId);
+                        setModalType('edit-expense');
+                      }}
+                    >
+                      <Edit size={18} color={Colors.light.tint} />
+                    </Pressable>
+                    <Pressable
+                      style={styles.deleteButton}
+                      onPress={() => handleDeleteExpense(expense.id, expense.name)}
+                    >
+                      <Trash2 size={18} color={Colors.light.danger} />
+                    </Pressable>
+                  </View>
+                </View>
+              ))}
+          </View>
         </View>
       </ScrollView>
 
