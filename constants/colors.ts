@@ -1,4 +1,5 @@
-const tintColorLight = "#10B981";
+const tintColorLight = "#8cb276";
+const primaryColor = "#8cb276";
 
 export default {
   light: {
@@ -12,7 +13,7 @@ export default {
     success: "#10B981",
     warning: "#F59E0B",
     danger: "#EF4444",
-    primary: "#3B82F6",
+    primary: primaryColor,
     income: "#10B981",
     expense: "#EF4444",
     bills: "#F59E0B",

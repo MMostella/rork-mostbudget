@@ -261,7 +261,7 @@ const styles = StyleSheet.create({
     fontWeight: '700' as const,
   },
   totalSection: {
-    backgroundColor: Colors.light.tint,
+    backgroundColor: Colors.light.primary,
     borderRadius: 16,
     padding: 20,
     alignItems: 'center',
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: Colors.light.tint,
+    backgroundColor: Colors.light.primary,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',

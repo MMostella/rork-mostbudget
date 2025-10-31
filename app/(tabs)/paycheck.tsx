@@ -1164,7 +1164,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: Colors.light.tint,
+    backgroundColor: Colors.light.primary,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',

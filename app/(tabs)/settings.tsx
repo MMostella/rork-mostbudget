@@ -566,7 +566,7 @@ const styles = StyleSheet.create({
     fontWeight: '700' as const,
   },
   deductButton: {
-    backgroundColor: Colors.light.tint,
+    backgroundColor: Colors.light.primary,
     borderRadius: 12,
     padding: 14,
     alignItems: 'center',
@@ -683,7 +683,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   currentBalanceCard: {
-    backgroundColor: Colors.light.tint,
+    backgroundColor: Colors.light.primary,
     borderRadius: 12,
     padding: 16,
     marginTop: 12,

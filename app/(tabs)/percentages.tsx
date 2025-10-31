@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.light.border,
   },
   incomeCard: {
-    backgroundColor: Colors.light.tint,
+    backgroundColor: Colors.light.primary,
     borderRadius: 20,
     padding: 24,
     alignItems: 'center',
