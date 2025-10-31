@@ -4,7 +4,7 @@ import { ArrowDownLeft, CreditCard, DollarSign, PiggyBank, Wallet } from 'lucide
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function DashboardScreen() {
-  const { getBudgetSummary, isLoading, income, expenses, currentSpendingTotal, currentSavingsTotal } = useBudget();
+  const { getBudgetSummary, getBillsSummary, isLoading, income, expenses, currentSpendingTotal, currentSavingsTotal } = useBudget();
 
   if (isLoading) {
     return (
@@ -15,7 +15,9 @@ export default function DashboardScreen() {
   }
 
   const summary = getBudgetSummary();
+  const billsSummary = getBillsSummary();
   const currentDate = new Date();
+  const remainingBalance = summary.totalIncome - billsSummary.totalPaid;
 
   return (
     <View style={styles.container}>
@@ -29,6 +31,54 @@ export default function DashboardScreen() {
               year: 'numeric',
             })}
           </Text>
+        </View>
+
+        <View style={styles.summaryCard}>
+          <Text style={styles.summaryTitle}>Monthly Summary</Text>
+          
+          <View style={styles.summaryRow}>
+            <View style={styles.summaryLabelContainer}>
+              <ArrowDownLeft size={16} color={Colors.light.income} />
+              <Text style={styles.summaryLabel}>Total Income</Text>
+            </View>
+            <Text style={[styles.summaryValue, { color: Colors.light.income }]}>
+              ${summary.totalIncome.toFixed(2)}
+            </Text>
+          </View>
+
+          <View style={styles.summaryDivider} />
+
+          <View style={styles.summaryRow}>
+            <View style={styles.summaryLabelContainer}>
+              <CreditCard size={16} color={Colors.light.bills} />
+              <Text style={styles.summaryLabel}>Total Bills</Text>
+            </View>
+            <Text style={[styles.summaryValue, { color: Colors.light.bills }]}>
+              ${billsSummary.totalBills.toFixed(2)}
+            </Text>
+          </View>
+
+          <View style={styles.summaryRow}>
+            <View style={styles.summaryLabelContainer}>
+              <DollarSign size={16} color={Colors.light.success} />
+              <Text style={styles.summaryLabel}>Amount Paid</Text>
+            </View>
+            <Text style={[styles.summaryValue, { color: Colors.light.success }]}>
+              ${billsSummary.totalPaid.toFixed(2)}
+            </Text>
+          </View>
+
+          <View style={styles.summaryDivider} />
+
+          <View style={styles.summaryRow}>
+            <View style={styles.summaryLabelContainer}>
+              <Wallet size={16} color={Colors.light.primary} />
+              <Text style={[styles.summaryLabel, { fontWeight: '700' }]}>Remaining Balance</Text>
+            </View>
+            <Text style={[styles.summaryValue, { color: Colors.light.primary, fontWeight: '700', fontSize: 18 }]}>
+              ${remainingBalance.toFixed(2)}
+            </Text>
+          </View>
         </View>
 
         <View style={styles.statsRow}>
@@ -154,6 +204,48 @@ const styles = StyleSheet.create({
   statCount: {
     fontSize: 11,
     color: Colors.light.textSecondary,
+  },
+  summaryCard: {
+    backgroundColor: Colors.light.cardBackground,
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  summaryTitle: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: Colors.light.text,
+    marginBottom: 16,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  summaryLabelContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  summaryLabel: {
+    fontSize: 14,
+    color: Colors.light.text,
+    fontWeight: '500' as const,
+  },
+  summaryValue: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+  },
+  summaryDivider: {
+    height: 1,
+    backgroundColor: Colors.light.border,
+    marginVertical: 4,
   },
   emptyState: {
     alignItems: 'center',
