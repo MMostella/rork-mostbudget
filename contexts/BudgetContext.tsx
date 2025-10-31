@@ -15,6 +15,41 @@ const STORAGE_KEYS = {
   HOUSEHOLD: '@budget_household',
 };
 
+const DEFAULT_INCOME_SOURCES: Income[] = [
+  {
+    id: 'preset_income_1',
+    name: 'Salary1',
+    amount: 0,
+    frequency: 'monthly',
+    startDate: new Date().toISOString(),
+    usedForBills: true,
+  },
+  {
+    id: 'preset_income_2',
+    name: 'Salary2',
+    amount: 0,
+    frequency: 'monthly',
+    startDate: new Date().toISOString(),
+    usedForBills: true,
+  },
+];
+
+const DEFAULT_EXPENSES: ExpenseItem[] = [
+  { id: 'preset_exp_1', name: 'Rent/Mortgage', amount: 0, category: 'Rent/Mortgage' },
+  { id: 'preset_exp_2', name: 'Utilities', amount: 0, category: 'Utilities' },
+  { id: 'preset_exp_3', name: 'Internet', amount: 0, category: 'Internet' },
+  { id: 'preset_exp_4', name: 'Phone', amount: 0, category: 'Phone' },
+  { id: 'preset_exp_5', name: 'Groceries & Dining Out', amount: 0, category: 'Groceries & Dining Out' },
+  { id: 'preset_exp_6', name: 'Transportation', amount: 0, category: 'Transportation' },
+  { id: 'preset_exp_7', name: 'Car Payment', amount: 0, category: 'Car Payment' },
+  { id: 'preset_exp_8', name: 'Car Insurance', amount: 0, category: 'Car Insurance' },
+  { id: 'preset_exp_9', name: 'Health & Medical', amount: 0, category: 'Health & Medical' },
+  { id: 'preset_exp_10', name: 'Household Supplies', amount: 0, category: 'Household Supplies' },
+  { id: 'preset_exp_11', name: 'Subscriptions', amount: 0, category: 'Subscriptions' },
+  { id: 'preset_exp_12', name: 'Debt Payments', amount: 0, category: 'Debt Payments' },
+  { id: 'preset_exp_13', name: 'Childcare & School', amount: 0, category: 'Childcare & School' },
+];
+
 export const [BudgetProvider, useBudget] = createContextHook(() => {
   const [income, setIncome] = useState<Income[]>([]);
   const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
@@ -49,8 +84,18 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
         AsyncStorage.getItem(STORAGE_KEYS.HOUSEHOLD),
       ]);
 
-      if (incomeData) setIncome(JSON.parse(incomeData));
-      if (expensesData) setExpenses(JSON.parse(expensesData));
+      if (incomeData) {
+        setIncome(JSON.parse(incomeData));
+      } else {
+        setIncome(DEFAULT_INCOME_SOURCES);
+        await AsyncStorage.setItem(STORAGE_KEYS.INCOME, JSON.stringify(DEFAULT_INCOME_SOURCES));
+      }
+      if (expensesData) {
+        setExpenses(JSON.parse(expensesData));
+      } else {
+        setExpenses(DEFAULT_EXPENSES);
+        await AsyncStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(DEFAULT_EXPENSES));
+      }
       if (paychecksData) setPaychecks(JSON.parse(paychecksData));
       if (percentagesData) {
         const parsed = JSON.parse(percentagesData);

@@ -742,7 +742,7 @@ export default function PaycheckScreen() {
                   <View style={styles.percentagePreview}>
                     <View style={styles.percentageRow}>
                       <Text style={styles.percentageName}>Ready to Budget</Text>
-                      <Text style={styles.percentageAmount}>${calculatedPreview.billsAmount.toFixed(2)}</Text>
+                      <Text style={styles.percentageAmount}>${(calculatedPreview.billsAmount - (settings.titheEnabled ? (parseFloat(amount) * settings.tithePercentage) / 100 : 0)).toFixed(2)}</Text>
                     </View>
                     {selectedExpensesTotal > 0 && (
                       <View style={styles.remainingBillRow}>
