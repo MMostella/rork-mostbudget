@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { BudgetSummary, BudgetPercentages, ExpenseItem, Income, Paycheck, AppSettings, DailyExpense, HouseholdMember } from '@/types/budget';
+import type { BudgetSummary, BudgetPercentages, ExpenseItem, Income, Paycheck, AppSettings, DailyExpense, HouseholdMember, Payment, MonthlyArchive } from '@/types/budget';
 
 const STORAGE_KEYS = {
   INCOME: '@budget_income',
@@ -13,6 +13,9 @@ const STORAGE_KEYS = {
   SPENDING_TOTAL: '@budget_spending_total',
   SAVINGS_TOTAL: '@budget_savings_total',
   HOUSEHOLD: '@budget_household',
+  PAYMENTS: '@budget_payments',
+  ARCHIVES: '@budget_archives',
+  LAST_RESET_DATE: '@budget_last_reset_date',
 };
 
 const DEFAULT_INCOME_SOURCES: Income[] = [
@@ -35,19 +38,19 @@ const DEFAULT_INCOME_SOURCES: Income[] = [
 ];
 
 const DEFAULT_EXPENSES: ExpenseItem[] = [
-  { id: 'preset_exp_1', name: 'Rent/Mortgage', amount: 0, category: 'Rent/Mortgage' },
-  { id: 'preset_exp_2', name: 'Utilities', amount: 0, category: 'Utilities' },
-  { id: 'preset_exp_3', name: 'Internet', amount: 0, category: 'Internet' },
-  { id: 'preset_exp_4', name: 'Phone', amount: 0, category: 'Phone' },
-  { id: 'preset_exp_5', name: 'Groceries & Dining Out', amount: 0, category: 'Groceries & Dining Out' },
-  { id: 'preset_exp_6', name: 'Transportation', amount: 0, category: 'Transportation' },
-  { id: 'preset_exp_7', name: 'Car Payment', amount: 0, category: 'Car Payment' },
-  { id: 'preset_exp_8', name: 'Car Insurance', amount: 0, category: 'Car Insurance' },
-  { id: 'preset_exp_9', name: 'Health & Medical', amount: 0, category: 'Health & Medical' },
-  { id: 'preset_exp_10', name: 'Household Supplies', amount: 0, category: 'Household Supplies' },
-  { id: 'preset_exp_11', name: 'Subscriptions', amount: 0, category: 'Subscriptions' },
-  { id: 'preset_exp_12', name: 'Debt Payments', amount: 0, category: 'Debt Payments' },
-  { id: 'preset_exp_13', name: 'Childcare & School', amount: 0, category: 'Childcare & School' },
+  { id: 'preset_exp_1', name: 'Rent/Mortgage', amount: 0, category: 'Rent/Mortgage', amountPaid: 0, isPaid: false },
+  { id: 'preset_exp_2', name: 'Utilities', amount: 0, category: 'Utilities', amountPaid: 0, isPaid: false },
+  { id: 'preset_exp_3', name: 'Internet', amount: 0, category: 'Internet', amountPaid: 0, isPaid: false },
+  { id: 'preset_exp_4', name: 'Phone', amount: 0, category: 'Phone', amountPaid: 0, isPaid: false },
+  { id: 'preset_exp_5', name: 'Groceries & Dining Out', amount: 0, category: 'Groceries & Dining Out', amountPaid: 0, isPaid: false },
+  { id: 'preset_exp_6', name: 'Transportation', amount: 0, category: 'Transportation', amountPaid: 0, isPaid: false },
+  { id: 'preset_exp_7', name: 'Car Payment', amount: 0, category: 'Car Payment', amountPaid: 0, isPaid: false },
+  { id: 'preset_exp_8', name: 'Car Insurance', amount: 0, category: 'Car Insurance', amountPaid: 0, isPaid: false },
+  { id: 'preset_exp_9', name: 'Health & Medical', amount: 0, category: 'Health & Medical', amountPaid: 0, isPaid: false },
+  { id: 'preset_exp_10', name: 'Household Supplies', amount: 0, category: 'Household Supplies', amountPaid: 0, isPaid: false },
+  { id: 'preset_exp_11', name: 'Subscriptions', amount: 0, category: 'Subscriptions', amountPaid: 0, isPaid: false },
+  { id: 'preset_exp_12', name: 'Debt Payments', amount: 0, category: 'Debt Payments', amountPaid: 0, isPaid: false },
+  { id: 'preset_exp_13', name: 'Childcare & School', amount: 0, category: 'Childcare & School', amountPaid: 0, isPaid: false },
 ];
 
 export const [BudgetProvider, useBudget] = createContextHook(() => {
@@ -64,6 +67,9 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
   const [currentSpendingTotal, setCurrentSpendingTotal] = useState(0);
   const [currentSavingsTotal, setCurrentSavingsTotal] = useState(0);
   const [householdMembers, setHouseholdMembers] = useState<HouseholdMember[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [archives, setArchives] = useState<MonthlyArchive[]>([]);
+  const [lastResetDate, setLastResetDate] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -72,7 +78,7 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
 
   const loadData = async () => {
     try {
-      const [paychecksData, percentagesData, settingsData, dailyExpensesData, spendingData, savingsData, householdData] = await Promise.all([
+      const [paychecksData, percentagesData, settingsData, dailyExpensesData, spendingData, savingsData, householdData, paymentsData, archivesData, lastResetData] = await Promise.all([
         AsyncStorage.getItem(STORAGE_KEYS.PAYCHECKS),
         AsyncStorage.getItem(STORAGE_KEYS.PERCENTAGES),
         AsyncStorage.getItem(STORAGE_KEYS.SETTINGS),
@@ -80,6 +86,9 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
         AsyncStorage.getItem(STORAGE_KEYS.SPENDING_TOTAL),
         AsyncStorage.getItem(STORAGE_KEYS.SAVINGS_TOTAL),
         AsyncStorage.getItem(STORAGE_KEYS.HOUSEHOLD),
+        AsyncStorage.getItem(STORAGE_KEYS.PAYMENTS),
+        AsyncStorage.getItem(STORAGE_KEYS.ARCHIVES),
+        AsyncStorage.getItem(STORAGE_KEYS.LAST_RESET_DATE),
       ]);
 
       setIncome(DEFAULT_INCOME_SOURCES);
@@ -111,6 +120,9 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
         }
       }
       if (householdData) setHouseholdMembers(JSON.parse(householdData));
+      if (paymentsData) setPayments(JSON.parse(paymentsData));
+      if (archivesData) setArchives(JSON.parse(archivesData));
+      if (lastResetData) setLastResetDate(lastResetData);
     } catch (error) {
       console.error('Error loading budget data:', error);
     } finally {
@@ -417,7 +429,128 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
     saveHouseholdMembers(updated);
   }, [householdMembers]);
 
+  const savePayments = async (newPayments: Payment[]) => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(newPayments));
+      setPayments(newPayments);
+    } catch (error) {
+      console.error('Error saving payments:', error);
+    }
+  };
 
+  const recordPayment = useCallback(async (expenseId: string, amount: number, paycheckId: string) => {
+    const newPayment: Payment = {
+      id: Date.now().toString(),
+      expenseId,
+      amount,
+      date: new Date().toISOString(),
+      paycheckId,
+    };
+    
+    const updatedPayments = [...payments, newPayment];
+    await savePayments(updatedPayments);
+    
+    const expense = expenses.find(e => e.id === expenseId);
+    if (expense) {
+      const totalPaidForExpense = updatedPayments
+        .filter(p => p.expenseId === expenseId)
+        .reduce((sum, p) => sum + p.amount, 0);
+      
+      const isPaid = totalPaidForExpense >= expense.amount;
+      
+      const updatedExpenses = expenses.map(e =>
+        e.id === expenseId
+          ? { ...e, amountPaid: totalPaidForExpense, isPaid }
+          : e
+      );
+      
+      await saveExpenses(updatedExpenses);
+    }
+  }, [payments, expenses]);
+
+  const getExpensePaymentStatus = useCallback((expenseId: string) => {
+    const expense = expenses.find(e => e.id === expenseId);
+    if (!expense) return { status: 'unpaid' as const, amountPaid: 0, amountDue: 0 };
+    
+    const totalPaid = payments
+      .filter(p => p.expenseId === expenseId)
+      .reduce((sum, p) => sum + p.amount, 0);
+    
+    const amountDue = Math.max(0, expense.amount - totalPaid);
+    
+    let status: 'paid' | 'partially-paid' | 'unpaid';
+    if (totalPaid >= expense.amount) {
+      status = 'paid';
+    } else if (totalPaid > 0) {
+      status = 'partially-paid';
+    } else {
+      status = 'unpaid';
+    }
+    
+    return { status, amountPaid: totalPaid, amountDue };
+  }, [expenses, payments]);
+
+  const getBillsSummary = useCallback(() => {
+    const totalBills = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+    const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
+    const totalRemaining = Math.max(0, totalBills - totalPaid);
+    
+    return {
+      totalBills,
+      totalPaid,
+      totalRemaining,
+    };
+  }, [expenses, payments]);
+
+  const archiveAndResetMonth = useCallback(async (currentMonth: string) => {
+    try {
+      const archive: MonthlyArchive = {
+        month: currentMonth,
+        expenses: expenses.map(e => ({ ...e })),
+        payments: payments.map(p => ({ ...p })),
+        totalPaid: payments.reduce((sum, p) => sum + p.amount, 0),
+        totalBills: expenses.reduce((sum, e) => sum + e.amount, 0),
+      };
+      
+      const updatedArchives = [...archives, archive];
+      await AsyncStorage.setItem(STORAGE_KEYS.ARCHIVES, JSON.stringify(updatedArchives));
+      setArchives(updatedArchives);
+      
+      const resetExpenses = expenses.map(e => ({
+        ...e,
+        amountPaid: 0,
+        isPaid: false,
+      }));
+      await saveExpenses(resetExpenses);
+      
+      await savePayments([]);
+      
+      const now = new Date();
+      await AsyncStorage.setItem(STORAGE_KEYS.LAST_RESET_DATE, now.toISOString());
+      setLastResetDate(now.toISOString());
+      
+      console.log(`Monthly data archived for ${currentMonth} and reset for new month`);
+    } catch (error) {
+      console.error('Error archiving and resetting monthly data:', error);
+    }
+  }, [expenses, payments, archives]);
+
+  const checkAndResetMonthly = useCallback(async () => {
+    const now = new Date();
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    
+    if (lastResetDate) {
+      const lastReset = new Date(lastResetDate);
+      const lastMonth = `${lastReset.getFullYear()}-${String(lastReset.getMonth() + 1).padStart(2, '0')}`;
+      
+      if (currentMonth !== lastMonth) {
+        await archiveAndResetMonth(currentMonth);
+      }
+    } else {
+      await AsyncStorage.setItem(STORAGE_KEYS.LAST_RESET_DATE, now.toISOString());
+      setLastResetDate(now.toISOString());
+    }
+  }, [lastResetDate, archiveAndResetMonth]);
 
   return useMemo(
     () => ({
@@ -430,6 +563,8 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
       currentSpendingTotal,
       currentSavingsTotal,
       householdMembers,
+      payments,
+      archives,
       addIncome,
       updateIncome,
       deleteIncome,
@@ -452,6 +587,10 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
       addHouseholdMember,
       updateHouseholdMember,
       deleteHouseholdMember,
+      recordPayment,
+      getExpensePaymentStatus,
+      getBillsSummary,
+      checkAndResetMonthly,
     }),
     [
       income,
@@ -463,6 +602,8 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
       currentSpendingTotal,
       currentSavingsTotal,
       householdMembers,
+      payments,
+      archives,
       addIncome,
       updateIncome,
       deleteIncome,
@@ -485,6 +626,10 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
       addHouseholdMember,
       updateHouseholdMember,
       deleteHouseholdMember,
+      recordPayment,
+      getExpensePaymentStatus,
+      getBillsSummary,
+      checkAndResetMonthly,
     ]
   );
 });

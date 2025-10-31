@@ -19,8 +19,11 @@ export type ExpenseItem = {
   amount: number;
   category: string;
   dueDay?: number;
+  dueDate?: string;
   description?: string;
   householdMemberId?: string;
+  amountPaid: number;
+  isPaid: boolean;
 };
 
 export type OneTimeExpense = {
@@ -71,6 +74,22 @@ export type DailyExpense = {
   description: string;
   amount: number;
   date: string;
+};
+
+export type Payment = {
+  id: string;
+  expenseId: string;
+  amount: number;
+  date: string;
+  paycheckId: string;
+};
+
+export type MonthlyArchive = {
+  month: string;
+  expenses: ExpenseItem[];
+  payments: Payment[];
+  totalPaid: number;
+  totalBills: number;
 };
 
 export const EXPENSE_CATEGORIES = [

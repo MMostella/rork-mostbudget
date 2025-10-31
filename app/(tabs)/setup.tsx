@@ -125,6 +125,8 @@ export default function SetupScreen() {
         dueDay: parsedDay,
         description: expenseDescription.trim() || undefined,
         householdMemberId: expenseHouseholdMemberId,
+        amountPaid: 0,
+        isPaid: false,
       };
       addExpense(newExpense);
     }
