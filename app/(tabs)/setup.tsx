@@ -21,7 +21,7 @@ type ModalType = 'income' | 'expense' | 'edit-income' | 'edit-expense' | null;
 type EditItem = Income | ExpenseItem | null;
 
 export default function SetupScreen() {
-  const { income, expenses, addIncome, deleteIncome, addExpense, deleteExpense, updateIncome, updateExpense, householdMembers } = useBudget();
+  const { income, expenses, addIncome, deleteIncome, addExpense, deleteExpense, updateIncome, updateExpense, householdMembers, maxIncomeLimit, maxExpenseLimit } = useBudget();
   const [modalType, setModalType] = useState<ModalType>(null);
   const [editingItem, setEditingItem] = useState<EditItem>(null);
   
@@ -43,6 +43,11 @@ export default function SetupScreen() {
   const expenseDueDayRef = useRef<TextInput>(null);
 
   const handleAddIncome = () => {
+    if (modalType !== 'edit-income' && income.length >= maxIncomeLimit) {
+      Alert.alert('Limit Reached', `You can only have up to ${maxIncomeLimit} income sources.`);
+      return;
+    }
+
     if (!incomeName.trim() || !incomeAmount.trim()) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
@@ -87,6 +92,11 @@ export default function SetupScreen() {
   };
 
   const handleAddExpense = () => {
+    if (modalType !== 'edit-expense' && expenses.length >= maxExpenseLimit) {
+      Alert.alert('Limit Reached', `You can only have up to ${maxExpenseLimit} expenses.`);
+      return;
+    }
+
     if (!expenseName.trim() || !expenseAmount.trim()) {
       Alert.alert('Error', 'Please fill in name and amount');
       return;
@@ -194,14 +204,14 @@ export default function SetupScreen() {
             <Text style={[styles.summaryAmount, { color: Colors.light.income }]}>
               ${totalMonthlyIncome.toFixed(2)}
             </Text>
-            <Text style={styles.summaryCount}>{income.length} sources</Text>
+            <Text style={styles.summaryCount}>{income.length}/{maxIncomeLimit} sources</Text>
           </View>
           <View style={[styles.summaryCard, { backgroundColor: '#FFF3E0' }]}>
             <Text style={styles.summaryLabel}>Monthly Expenses</Text>
             <Text style={[styles.summaryAmount, { color: Colors.light.bills }]}>
               ${totalMonthlyExpenses.toFixed(2)}
             </Text>
-            <Text style={styles.summaryCount}>{expenses.length} items</Text>
+            <Text style={styles.summaryCount}>{expenses.length}/{maxExpenseLimit} items</Text>
           </View>
         </View>
 

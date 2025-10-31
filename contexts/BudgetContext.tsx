@@ -37,6 +37,9 @@ const DEFAULT_INCOME_SOURCES: Income[] = [
   },
 ];
 
+const MAX_INCOME_SOURCES = 5;
+const MAX_EXPENSES = 15;
+
 const DEFAULT_EXPENSES: ExpenseItem[] = [
   { id: 'preset_exp_1', name: 'Rent/Mortgage', amount: 0, category: 'Rent/Mortgage', amountPaid: 0, isPaid: false },
   { id: 'preset_exp_2', name: 'Utilities', amount: 0, category: 'Utilities', amountPaid: 0, isPaid: false },
@@ -149,6 +152,10 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
   };
 
   const addIncome = useCallback((newIncome: Income) => {
+    if (income.length >= MAX_INCOME_SOURCES) {
+      console.error(`Cannot add more than ${MAX_INCOME_SOURCES} income sources`);
+      return;
+    }
     const updated = [...income, newIncome];
     saveIncome(updated);
   }, [income]);
@@ -166,6 +173,10 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
   }, [income]);
 
   const addExpense = useCallback((newExpense: ExpenseItem) => {
+    if (expenses.length >= MAX_EXPENSES) {
+      console.error(`Cannot add more than ${MAX_EXPENSES} expenses`);
+      return;
+    }
     const updated = [...expenses, newExpense];
     saveExpenses(updated);
   }, [expenses]);
@@ -595,6 +606,8 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
       householdMembers,
       payments,
       archives,
+      maxIncomeLimit: MAX_INCOME_SOURCES,
+      maxExpenseLimit: MAX_EXPENSES,
       addIncome,
       updateIncome,
       deleteIncome,
