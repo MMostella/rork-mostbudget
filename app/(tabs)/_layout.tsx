@@ -1,33 +1,34 @@
 import { Tabs, router } from "expo-router";
 import { ClipboardList, DollarSign, HelpCircle, Home, PieChart, Receipt, Settings } from "lucide-react-native";
 import React from "react";
-import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
-
-import Colors from "@/constants/colors";
+import { Image, StyleSheet, TouchableOpacity } from "react-native";
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors.light.tint,
+        tabBarActiveTintColor: "#FFFFFF",
         headerShown: true,
         tabBarShowLabel: false,
-        headerTitle: "",
-        headerLeft: () => (
-          <View style={styles.headerLogoContainer}>
-            <Image
-              source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/6et2v32sviqr9mrtxo9gt' }}
-              style={styles.headerLogo}
-              resizeMode="contain"
-            />
-          </View>
+        headerStyle: {
+          backgroundColor: "#8cb276",
+        },
+        tabBarStyle: {
+          backgroundColor: "#8cb276",
+        },
+        headerTitle: () => (
+          <Image
+            source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/gb7b09hh40o2v5w400z83' }}
+            style={styles.headerLogo}
+            resizeMode="contain"
+          />
         ),
         headerRight: () => (
           <TouchableOpacity
             onPress={() => router.push('/get-started')}
             style={styles.helpButton}
           >
-            <HelpCircle size={24} color={Colors.light.tint} />
+            <HelpCircle size={24} color="#FFFFFF" />
           </TouchableOpacity>
         ),
       }}
@@ -73,16 +74,9 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
-  headerLogoContainer: {
-    height: 44,
-    width: 160,
-    justifyContent: 'center',
-    alignItems: 'flex-start',
-    marginLeft: 12,
-  },
   headerLogo: {
-    height: 44,
-    width: 160,
+    height: 40,
+    width: 40,
   },
   helpButton: {
     marginRight: 16,
