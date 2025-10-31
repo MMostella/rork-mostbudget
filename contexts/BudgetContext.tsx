@@ -122,7 +122,7 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
       if (householdData) setHouseholdMembers(JSON.parse(householdData));
       if (paymentsData) setPayments(JSON.parse(paymentsData));
       if (archivesData) setArchives(JSON.parse(archivesData));
-      if (lastResetData) setLastResetDate(lastResetData);
+      if (lastResetDate) setLastResetDate(lastResetData);
     } catch (error) {
       console.error('Error loading budget data:', error);
     } finally {
@@ -204,6 +204,56 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
     }
   }, []);
 
+  const getAdjustedExpenseAmount = (expenseAmount: number, frequency: 'weekly' | 'biweekly' | 'monthly'): number => {
+    switch (frequency) {
+      case 'weekly':
+        return expenseAmount / 4;
+      case 'biweekly':
+        return expenseAmount / 2;
+      case 'monthly':
+        return expenseAmount;
+    }
+  };
+
+  const savePayments = async (newPayments: Payment[]) => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(newPayments));
+      setPayments(newPayments);
+    } catch (error) {
+      console.error('Error saving payments:', error);
+    }
+  };
+
+  const recordPayment = useCallback(async (expenseId: string, amount: number, paycheckId: string) => {
+    const newPayment: Payment = {
+      id: Date.now().toString(),
+      expenseId,
+      amount,
+      date: new Date().toISOString(),
+      paycheckId,
+    };
+    
+    const updatedPayments = [...payments, newPayment];
+    await savePayments(updatedPayments);
+    
+    const expense = expenses.find(e => e.id === expenseId);
+    if (expense) {
+      const totalPaidForExpense = updatedPayments
+        .filter(p => p.expenseId === expenseId)
+        .reduce((sum, p) => sum + p.amount, 0);
+      
+      const isPaid = totalPaidForExpense >= expense.amount;
+      
+      const updatedExpenses = expenses.map(e =>
+        e.id === expenseId
+          ? { ...e, amountPaid: totalPaidForExpense, isPaid }
+          : e
+      );
+      
+      await saveExpenses(updatedExpenses);
+    }
+  }, [payments, expenses]);
+
   const addPaycheck = useCallback((newPaycheck: Paycheck) => {
     const updated = [...paychecks, newPaycheck];
     savePaychecks(updated);
@@ -213,12 +263,30 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
     updateSpendingSavingsTotals(newSpending, newSavings);
   }, [paychecks, currentSpendingTotal, currentSavingsTotal, updateSpendingSavingsTotals]);
 
-  const updatePaycheck = useCallback((id: string, updatedPaycheck: Partial<Paycheck>) => {
+  const updatePaycheck = useCallback(async (id: string, updatedPaycheck: Partial<Paycheck>) => {
+    const oldPaycheck = paychecks.find(p => p.id === id);
     const updated = paychecks.map((item) =>
       item.id === id ? { ...item, ...updatedPaycheck } : item
     );
-    savePaychecks(updated);
-  }, [paychecks]);
+    await savePaychecks(updated);
+    
+    if (oldPaycheck && updatedPaycheck.checkedExpenses) {
+      const oldChecked = (oldPaycheck as any).checkedExpenses || {};
+      const newChecked = updatedPaycheck.checkedExpenses;
+      
+      for (const expenseId in newChecked) {
+        if (newChecked[expenseId] && !oldChecked[expenseId]) {
+          const expense = expenses.find(e => e.id === expenseId);
+          if (expense && expenseId !== 'tithe') {
+            const adjustedAmount = getAdjustedExpenseAmount(expense.amount, oldPaycheck.frequency);
+            await recordPayment(expenseId, adjustedAmount, id);
+          } else if (expenseId === 'tithe' && oldPaycheck.titheAmount) {
+            console.log('Tithe marked as paid');
+          }
+        }
+      }
+    }
+  }, [paychecks, expenses, recordPayment]);
 
   const deletePaycheck = useCallback((id: string) => {
     const paycheckToDelete = paychecks.find((item) => item.id === id);
@@ -429,54 +497,16 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
     saveHouseholdMembers(updated);
   }, [householdMembers]);
 
-  const savePayments = async (newPayments: Payment[]) => {
-    try {
-      await AsyncStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(newPayments));
-      setPayments(newPayments);
-    } catch (error) {
-      console.error('Error saving payments:', error);
-    }
-  };
-
-  const recordPayment = useCallback(async (expenseId: string, amount: number, paycheckId: string) => {
-    const newPayment: Payment = {
-      id: Date.now().toString(),
-      expenseId,
-      amount,
-      date: new Date().toISOString(),
-      paycheckId,
-    };
-    
-    const updatedPayments = [...payments, newPayment];
-    await savePayments(updatedPayments);
-    
-    const expense = expenses.find(e => e.id === expenseId);
-    if (expense) {
-      const totalPaidForExpense = updatedPayments
-        .filter(p => p.expenseId === expenseId)
-        .reduce((sum, p) => sum + p.amount, 0);
-      
-      const isPaid = totalPaidForExpense >= expense.amount;
-      
-      const updatedExpenses = expenses.map(e =>
-        e.id === expenseId
-          ? { ...e, amountPaid: totalPaidForExpense, isPaid }
-          : e
-      );
-      
-      await saveExpenses(updatedExpenses);
-    }
-  }, [payments, expenses]);
-
   const getExpensePaymentStatus = useCallback((expenseId: string) => {
     const expense = expenses.find(e => e.id === expenseId);
-    if (!expense) return { status: 'unpaid' as const, amountPaid: 0, amountDue: 0 };
+    if (!expense) return { status: 'unpaid' as const, amountPaid: 0, amountDue: 0, percentPaid: 0 };
     
     const totalPaid = payments
       .filter(p => p.expenseId === expenseId)
       .reduce((sum, p) => sum + p.amount, 0);
     
     const amountDue = Math.max(0, expense.amount - totalPaid);
+    const percentPaid = expense.amount > 0 ? (totalPaid / expense.amount) * 100 : 0;
     
     let status: 'paid' | 'partially-paid' | 'unpaid';
     if (totalPaid >= expense.amount) {
@@ -487,7 +517,7 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
       status = 'unpaid';
     }
     
-    return { status, amountPaid: totalPaid, amountDue };
+    return { status, amountPaid: totalPaid, amountDue, percentPaid };
   }, [expenses, payments]);
 
   const getBillsSummary = useCallback(() => {

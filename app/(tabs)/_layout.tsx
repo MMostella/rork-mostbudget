@@ -1,5 +1,5 @@
 import { Tabs, router } from "expo-router";
-import { ClipboardList, DollarSign, HelpCircle, Home, PieChart, Receipt, Settings } from "lucide-react-native";
+import { ClipboardList, DollarSign, FileText, HelpCircle, Home, PieChart, Receipt, Settings } from "lucide-react-native";
 import React from "react";
 import { Image, StyleSheet, TouchableOpacity } from "react-native";
 
@@ -43,6 +43,12 @@ export default function TabLayout() {
         name="paycheck"
         options={{
           tabBarIcon: ({ color }) => <DollarSign color={color} size={24} />,
+        }}
+      />
+      <Tabs.Screen
+        name="bills"
+        options={{
+          tabBarIcon: ({ color }) => <FileText color={color} size={24} />,
         }}
       />
       <Tabs.Screen
