@@ -74,13 +74,8 @@ export default function PaycheckScreen() {
       savingsAmount = Math.max(0, remaining);
       spendingAmount = 0;
     } else {
-      if (actualBillsPaid > billsAmount) {
-        const overpayment = actualBillsPaid - billsAmount;
-        spendingAmount = Math.max(0, spendingAmountBase - overpayment);
-        const remainingOverpayment = Math.max(0, overpayment - spendingAmountBase);
-        savingsAmount = Math.max(0, savingsAmountBase - remainingOverpayment);
-      } else {
-        const unusedBillAmount = billsAmount - actualBillsPaid;
+      const unusedBillAmount = billsAmount - actualBillsPaid;
+      if (unusedBillAmount > 0) {
         savingsAmount = savingsAmountBase + unusedBillAmount;
       }
     }
@@ -145,9 +140,14 @@ export default function PaycheckScreen() {
       }
       
       const titheAmount = settings.titheEnabled ? (parsedAmount * settings.tithePercentage) / 100 : 0;
+      const summary = getBudgetSummary();
+      const totalMonthlyIncome = summary.totalIncome;
+      const totalMonthlyExpenses = summary.totalBills;
+      const billsPercentage = totalMonthlyIncome > 0 ? (totalMonthlyExpenses / totalMonthlyIncome) * 100 : 0;
+      const billsAmount = (parsedAmount * billsPercentage) / 100;
       const newTotal = selectedExpensesTotal + expenseAmount + titheAmount;
       
-      if (newTotal > parsedAmount) {
+      if (newTotal > billsAmount) {
         Alert.alert('Cannot Add Expense', 'Total expenses cannot exceed paycheck amount.');
         return prev;
       }
@@ -351,20 +351,15 @@ export default function PaycheckScreen() {
     const savingsAmountBase = (parsedAmount * savingsPercentageBase) / 100;
     let spendingAmount = spendingAmountBase;
     let savingsAmount = savingsAmountBase;
-    const remainingBillAmount = billsAmount - actualBillsPaid;
+    const remainingBillAmount = Math.max(0, billsAmount - actualBillsPaid);
 
     if (addRemainingToSavings) {
       const remaining = parsedAmount - actualBillsPaid;
       savingsAmount = Math.max(0, remaining);
       spendingAmount = 0;
     } else {
-      if (actualBillsPaid > billsAmount) {
-        const overpayment = actualBillsPaid - billsAmount;
-        spendingAmount = Math.max(0, spendingAmountBase - overpayment);
-        const remainingOverpayment = Math.max(0, overpayment - spendingAmountBase);
-        savingsAmount = Math.max(0, savingsAmountBase - remainingOverpayment);
-      } else {
-        const unusedBillAmount = billsAmount - actualBillsPaid;
+      const unusedBillAmount = billsAmount - actualBillsPaid;
+      if (unusedBillAmount > 0) {
         savingsAmount = savingsAmountBase + unusedBillAmount;
       }
     }
