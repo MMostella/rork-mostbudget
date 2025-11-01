@@ -376,6 +376,12 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
   const getBudgetPercentages = useCallback((): BudgetPercentages => {
     const totalIncomeForBills = calculateMonthlyIncomeForBills();
     const totalExpenses = calculateTotalExpenses();
+    
+    let totalExpensesWithTithing = totalExpenses;
+    if (settings.titheEnabled) {
+      const titheAmount = totalIncomeForBills * (settings.tithePercentage / 100);
+      totalExpensesWithTithing = totalExpenses + titheAmount;
+    }
 
     if (totalIncomeForBills === 0) {
       return {
@@ -387,8 +393,8 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
       };
     }
 
-    const billsPercentage = (totalExpenses / totalIncomeForBills) * 100;
-    const remaining = totalIncomeForBills - totalExpenses;
+    const billsPercentage = (totalExpensesWithTithing / totalIncomeForBills) * 100;
+    const remaining = totalIncomeForBills - totalExpensesWithTithing;
     const spendPercentage = (remaining * spendMultiplier / totalIncomeForBills) * 100;
     const savingsPercentage = (remaining * savingsMultiplier / totalIncomeForBills) * 100;
 
@@ -399,7 +405,7 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
       spendMultiplier,
       savingsMultiplier,
     };
-  }, [calculateMonthlyIncomeForBills, calculateTotalExpenses, spendMultiplier, savingsMultiplier]);
+  }, [calculateMonthlyIncomeForBills, calculateTotalExpenses, spendMultiplier, savingsMultiplier, settings]);
 
   const updatePercentageMultipliers = useCallback(async (spend: number, savings: number) => {
     try {
