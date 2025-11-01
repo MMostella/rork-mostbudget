@@ -56,8 +56,9 @@ export default function PaycheckScreen() {
     const totalMonthlyExpenses = summary.totalBills;
 
     const billsPercentage = totalMonthlyIncome > 0 ? (totalMonthlyExpenses / totalMonthlyIncome) * 100 : 0;
-    const remainingPercentage = 100 - billsPercentage;
     const percentages = getBudgetPercentages();
+    const tithePercentage = settings.titheEnabled ? settings.tithePercentage : 0;
+    const remainingPercentage = 100 - billsPercentage - tithePercentage;
     const spendingPercentage = remainingPercentage * percentages.spendMultiplier;
     const savingsPercentage = remainingPercentage * percentages.savingsMultiplier;
 
@@ -339,8 +340,9 @@ export default function PaycheckScreen() {
     const totalMonthlyExpenses = summary.totalBills;
 
     const billsPercentage = totalMonthlyIncome > 0 ? (totalMonthlyExpenses / totalMonthlyIncome) * 100 : 0;
-    const remainingPercentage = 100 - billsPercentage;
     const percentages = getBudgetPercentages();
+    const tithePercentage = settings.titheEnabled ? settings.tithePercentage : 0;
+    const remainingPercentage = 100 - billsPercentage - tithePercentage;
     const spendingPercentageBase = remainingPercentage * percentages.spendMultiplier;
     const savingsPercentageBase = remainingPercentage * percentages.savingsMultiplier;
 
