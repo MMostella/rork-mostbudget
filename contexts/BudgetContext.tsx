@@ -373,15 +373,18 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
     };
   }, [calculateMonthlyIncome, calculateTotalExpenses]);
 
+  const getTithingAmount = useCallback((): number => {
+    if (!settings.titheEnabled) return 0;
+    const totalIncomeForBills = calculateMonthlyIncomeForBills();
+    return totalIncomeForBills * (settings.tithePercentage / 100);
+  }, [settings, calculateMonthlyIncomeForBills]);
+
   const getBudgetPercentages = useCallback((): BudgetPercentages => {
     const totalIncomeForBills = calculateMonthlyIncomeForBills();
     const totalExpenses = calculateTotalExpenses();
+    const titheAmount = getTithingAmount();
     
-    let totalExpensesWithTithing = totalExpenses;
-    if (settings.titheEnabled) {
-      const titheAmount = totalIncomeForBills * (settings.tithePercentage / 100);
-      totalExpensesWithTithing = totalExpenses + titheAmount;
-    }
+    const totalExpensesWithTithing = totalExpenses + titheAmount;
 
     if (totalIncomeForBills === 0) {
       return {
@@ -405,7 +408,7 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
       spendMultiplier,
       savingsMultiplier,
     };
-  }, [calculateMonthlyIncomeForBills, calculateTotalExpenses, spendMultiplier, savingsMultiplier, settings]);
+  }, [calculateMonthlyIncomeForBills, calculateTotalExpenses, getTithingAmount, spendMultiplier, savingsMultiplier]);
 
   const updatePercentageMultipliers = useCallback(async (spend: number, savings: number) => {
     try {
@@ -625,6 +628,7 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
       deletePaycheck,
       getBudgetSummary,
       getBudgetPercentages,
+      getTithingAmount,
       updatePercentageMultipliers,
       updateSettings,
       getTotalSavings,
@@ -664,6 +668,7 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
       deletePaycheck,
       getBudgetSummary,
       getBudgetPercentages,
+      getTithingAmount,
       updatePercentageMultipliers,
       updateSettings,
       getTotalSavings,

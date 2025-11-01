@@ -18,7 +18,7 @@ import {
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 export default function PercentagesScreen() {
-  const { getBudgetPercentages, getBudgetSummary, updatePercentageMultipliers, isLoading } =
+  const { getBudgetPercentages, getBudgetSummary, updatePercentageMultipliers, getTithingAmount, settings, isLoading } =
     useBudget();
   const [modalVisible, setModalVisible] = useState(false);
   const [spendInput, setSpendInput] = useState('');
@@ -37,6 +37,8 @@ export default function PercentagesScreen() {
 
   const percentages = getBudgetPercentages();
   const summary = getBudgetSummary();
+  const tithingAmount = getTithingAmount();
+  const totalBillsWithTithing = summary.totalBills + tithingAmount;
 
   const handleOpenModal = () => {
     setSpendInput((percentages.spendMultiplier * 100).toString());
@@ -67,7 +69,7 @@ export default function PercentagesScreen() {
     setModalVisible(false);
   };
 
-  const remaining = summary.totalIncome - summary.totalBills;
+  const remaining = summary.totalIncome - totalBillsWithTithing;
   const spendAmount = remaining * percentages.spendMultiplier;
   const savingsAmount = remaining * percentages.savingsMultiplier;
 
@@ -103,8 +105,20 @@ export default function PercentagesScreen() {
               </View>
             </View>
             <Text style={[styles.percentageAmount, { color: Colors.light.bills }]}>
-              ${summary.totalBills.toFixed(2)}
+              ${totalBillsWithTithing.toFixed(2)}
             </Text>
+            {settings.titheEnabled && tithingAmount > 0 && (
+              <View style={styles.breakdownRow}>
+                <Text style={styles.breakdownLabel}>Monthly Expenses:</Text>
+                <Text style={styles.breakdownAmount}>${summary.totalBills.toFixed(2)}</Text>
+              </View>
+            )}
+            {settings.titheEnabled && tithingAmount > 0 && (
+              <View style={styles.breakdownRow}>
+                <Text style={styles.breakdownLabel}>Tithing ({settings.tithePercentage}%):</Text>
+                <Text style={styles.breakdownAmount}>${tithingAmount.toFixed(2)}</Text>
+              </View>
+            )}
             <View style={styles.progressBarContainer}>
               <View
                 style={[
@@ -447,5 +461,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600' as const,
     color: '#FFFFFF',
+  },
+  breakdownRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  breakdownLabel: {
+    fontSize: 13,
+    color: Colors.light.textSecondary,
+    fontWeight: '500' as const,
+  },
+  breakdownAmount: {
+    fontSize: 13,
+    color: Colors.light.text,
+    fontWeight: '600' as const,
   },
 });
