@@ -39,7 +39,6 @@ export default function GetStartedScreen() {
           <Text style={styles.stepText}>Bills</Text>
           <Text style={styles.stepText}>Spending</Text>
           <Text style={styles.stepText}>Savings</Text>
-          <Text style={styles.stepText}>(And Tithing, if enabled)</Text>
           <Text style={styles.stepText}>
             Make sure everything fits within your income before logging paychecks.
           </Text>
