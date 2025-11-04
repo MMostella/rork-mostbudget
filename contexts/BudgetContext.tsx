@@ -81,7 +81,9 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
 
   const loadData = async () => {
     try {
-      const [paychecksData, percentagesData, settingsData, dailyExpensesData, spendingData, savingsData, householdData, paymentsData, archivesData, lastResetData] = await Promise.all([
+      const [incomeData, expensesData, paychecksData, percentagesData, settingsData, dailyExpensesData, spendingData, savingsData, householdData, paymentsData, archivesData, lastResetData] = await Promise.all([
+        AsyncStorage.getItem(STORAGE_KEYS.INCOME),
+        AsyncStorage.getItem(STORAGE_KEYS.EXPENSES),
         AsyncStorage.getItem(STORAGE_KEYS.PAYCHECKS),
         AsyncStorage.getItem(STORAGE_KEYS.PERCENTAGES),
         AsyncStorage.getItem(STORAGE_KEYS.SETTINGS),
@@ -94,8 +96,19 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
         AsyncStorage.getItem(STORAGE_KEYS.LAST_RESET_DATE),
       ]);
 
-      setIncome(DEFAULT_INCOME_SOURCES);
-      setExpenses(DEFAULT_EXPENSES);
+      if (incomeData) {
+        setIncome(JSON.parse(incomeData));
+      } else {
+        setIncome(DEFAULT_INCOME_SOURCES);
+        await AsyncStorage.setItem(STORAGE_KEYS.INCOME, JSON.stringify(DEFAULT_INCOME_SOURCES));
+      }
+
+      if (expensesData) {
+        setExpenses(JSON.parse(expensesData));
+      } else {
+        setExpenses(DEFAULT_EXPENSES);
+        await AsyncStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(DEFAULT_EXPENSES));
+      }
       if (paychecksData) setPaychecks(JSON.parse(paychecksData));
       if (percentagesData) {
         const parsed = JSON.parse(percentagesData);
