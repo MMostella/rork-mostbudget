@@ -1,9 +1,11 @@
 import Colors from '@/constants/colors';
 import { useBudget } from '@/contexts/BudgetContext';
 import type { HouseholdMember } from '@/types/budget';
-import { ChevronRight, Edit, Plus, Settings as SettingsIcon, Trash2, Users } from 'lucide-react-native';
+import { ChevronRight, Download, Edit, Plus, Settings as SettingsIcon, Trash2, Upload, Users } from 'lucide-react-native';
 import { useRef, useState } from 'react';
 import { router } from 'expo-router';
+import * as DocumentPicker from 'expo-document-picker';
+import BackupService from '@/src/services/BackupService';
 import {
   Alert,
   Keyboard,
@@ -125,6 +127,61 @@ export default function SettingsScreen() {
         onPress: () => deleteHouseholdMember(id),
       },
     ]);
+  };
+
+  const handleExportData = async () => {
+    try {
+      await BackupService.shareBackup();
+    } catch (error) {
+      Alert.alert('Error', 'Failed to export data');
+    }
+  };
+
+  const handleImportData = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'application/json',
+        copyToCacheDirectory: true,
+      });
+
+      if (result.canceled) {
+        return;
+      }
+
+      Alert.alert(
+        'Import Data',
+        'This will replace all your current data with the imported data. Are you sure?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Import',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                await BackupService.loadBackupFromFile(result.assets[0].uri);
+                Alert.alert(
+                  'Success',
+                  'Data imported successfully. Please restart the app to see the changes.',
+                  [
+                    {
+                      text: 'OK',
+                      onPress: () => {
+                        // Reload the app context
+                        router.replace('/');
+                      },
+                    },
+                  ]
+                );
+              } catch (error) {
+                Alert.alert('Error', 'Failed to import data. Please check the file format.');
+              }
+            },
+          },
+        ]
+      );
+    } catch (error) {
+      Alert.alert('Error', 'Failed to select file');
+    }
   };
 
   return (
@@ -252,6 +309,33 @@ export default function SettingsScreen() {
         </View>
 
 
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Data Backup</Text>
+
+          <View style={styles.settingCard}>
+            <Text style={styles.settingLabel}>Export & Import</Text>
+            <Text style={styles.settingDescription}>
+              Backup your data or restore from a previous backup
+            </Text>
+            <View style={styles.backupButtonsRow}>
+              <Pressable
+                style={styles.backupButton}
+                onPress={handleExportData}
+              >
+                <Download size={18} color={Colors.light.tint} />
+                <Text style={styles.backupButtonText}>Export Data</Text>
+              </Pressable>
+              <Pressable
+                style={styles.backupButton}
+                onPress={handleImportData}
+              >
+                <Upload size={18} color={Colors.light.tint} />
+                <Text style={styles.backupButtonText}>Import Data</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Manual Adjustments</Text>
@@ -1036,5 +1120,27 @@ const styles = StyleSheet.create({
   },
   usedForBillsButtonTextActive: {
     color: '#FFFFFF',
+  },
+  backupButtonsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 16,
+  },
+  backupButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: Colors.light.background,
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 2,
+    borderColor: Colors.light.tint,
+  },
+  backupButtonText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.light.tint,
   },
 });
