@@ -11,7 +11,7 @@
     "splash": {
       "image": "./assets/images/MostBudgetLogo_1.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#8cb276"
     },
     "ios": {
       "supportsTablet": true,
@@ -21,7 +21,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/MostBudgetLogo_1.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#8cb276"
       },
       "package": "app.rork.most_budget",
       "permissions": [
