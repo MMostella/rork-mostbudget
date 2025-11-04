@@ -1,14 +1,11 @@
 import Colors from '@/constants/colors';
 import { useBudget } from '@/contexts/BudgetContext';
 import type { HouseholdMember } from '@/types/budget';
-import { ChevronRight, Download, Edit, Plus, Settings as SettingsIcon, Trash2, Upload, Users } from 'lucide-react-native';
+import { AlertTriangle, ChevronRight, Edit, Plus, Settings as SettingsIcon, Trash2, Users } from 'lucide-react-native';
 import { useRef, useState } from 'react';
 import { router } from 'expo-router';
-import * as DocumentPicker from 'expo-document-picker';
-import BackupService from '@/src/services/BackupService';
 import {
   Alert,
-  Keyboard,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -21,16 +18,13 @@ import {
   View,
 } from 'react-native';
 
-type ModalType = 'adjust' | 'household' | 'edit-household' | null;
+type ModalType = 'household' | 'edit-household' | null;
 type EditItem = HouseholdMember | null;
 
 export default function SettingsScreen() {
   const { 
     settings, 
     updateSettings, 
-    currentSpendingTotal, 
-    currentSavingsTotal, 
-    setSpendingOrSavingsTotal, 
     householdMembers, 
     addHouseholdMember, 
     updateHouseholdMember, 
@@ -43,11 +37,8 @@ export default function SettingsScreen() {
   const [tithePercentageText, setTithePercentageText] = useState(
     settings.tithePercentage.toString()
   );
-  const [adjustAmount, setAdjustAmount] = useState('');
-  const [adjustTarget, setAdjustTarget] = useState<'spending' | 'savings'>('spending');
   const [householdName, setHouseholdName] = useState('');
 
-  const amountInputRef = useRef<TextInput>(null);
   const householdNameRef = useRef<TextInput>(null);
 
   const handleTitheToggle = (value: boolean) => {
@@ -70,32 +61,7 @@ export default function SettingsScreen() {
     }
   };
 
-  const handleAdjustConfirm = () => {
-    const parsedAmount = parseFloat(adjustAmount);
-    if (isNaN(parsedAmount) || parsedAmount < 0) {
-      Alert.alert('Invalid Amount', 'Please enter a valid amount');
-      return;
-    }
 
-    const currentBalance = adjustTarget === 'spending' ? currentSpendingTotal : currentSavingsTotal;
-
-    Alert.alert(
-      'Confirm Change',
-      `Are you sure you want to change your ${adjustTarget} total?\n\nCurrent ${adjustTarget}: ${currentBalance.toFixed(2)}\nNew ${adjustTarget}: ${parsedAmount.toFixed(2)}`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Confirm',
-          onPress: async () => {
-            await setSpendingOrSavingsTotal(parsedAmount, adjustTarget);
-            setAdjustAmount('');
-            setModalType(null);
-            Keyboard.dismiss();
-          },
-        },
-      ]
-    );
-  };
 
   const handleAddHouseholdMember = () => {
     if (!householdName.trim()) {
@@ -129,60 +95,7 @@ export default function SettingsScreen() {
     ]);
   };
 
-  const handleExportData = async () => {
-    try {
-      await BackupService.shareBackup();
-    } catch (error) {
-      Alert.alert('Error', 'Failed to export data');
-    }
-  };
 
-  const handleImportData = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: 'application/json',
-        copyToCacheDirectory: true,
-      });
-
-      if (result.canceled) {
-        return;
-      }
-
-      Alert.alert(
-        'Import Data',
-        'This will replace all your current data with the imported data. Are you sure?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Import',
-            style: 'destructive',
-            onPress: async () => {
-              try {
-                await BackupService.loadBackupFromFile(result.assets[0].uri);
-                Alert.alert(
-                  'Success',
-                  'Data imported successfully. Please restart the app to see the changes.',
-                  [
-                    {
-                      text: 'OK',
-                      onPress: () => {
-                        // Reload the app context
-                        router.replace('/');
-                      },
-                    },
-                  ]
-                );
-              } catch (error) {
-                Alert.alert('Error', 'Failed to import data. Please check the file format.');
-              }
-            },
-          },
-        ]
-      );
-    } catch (error) {
-      Alert.alert('Error', 'Failed to select file');
-    }
-  };
 
   return (
     <View style={styles.container}>
@@ -311,160 +224,25 @@ export default function SettingsScreen() {
 
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Data Backup</Text>
-
-          <View style={styles.settingCard}>
-            <Text style={styles.settingLabel}>Export & Import</Text>
-            <Text style={styles.settingDescription}>
-              Backup your data or restore from a previous backup
-            </Text>
-            <View style={styles.backupButtonsRow}>
-              <Pressable
-                style={styles.backupButton}
-                onPress={handleExportData}
-              >
-                <Download size={18} color={Colors.light.tint} />
-                <Text style={styles.backupButtonText}>Export Data</Text>
-              </Pressable>
-              <Pressable
-                style={styles.backupButton}
-                onPress={handleImportData}
-              >
-                <Upload size={18} color={Colors.light.tint} />
-                <Text style={styles.backupButtonText}>Import Data</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Manual Adjustments</Text>
-
-          <View style={styles.settingCard}>
-            <Text style={styles.settingLabel}>Adjust Spending or Savings</Text>
-            <Text style={styles.settingDescription}>
-              Manually change your spending or savings balance
-            </Text>
-            <View style={styles.balanceRow}>
-              <View style={styles.balanceItem}>
-                <Text style={styles.balanceLabel}>Spending:</Text>
-                <Text style={[styles.balanceAmount, { color: Colors.light.income }]}>
-                  ${currentSpendingTotal.toFixed(2)}
-                </Text>
+          <Text style={styles.sectionTitle}>Danger Zone</Text>
+          
+          <Pressable 
+            style={styles.dangerNavigationCard}
+            onPress={() => router.push('/danger-zone')}
+          >
+            <View style={styles.navigationContent}>
+              <View style={styles.navigationLeft}>
+                <AlertTriangle size={20} color={Colors.light.danger} />
+                <View style={styles.navigationTextContainer}>
+                  <Text style={styles.navigationTitle}>Danger Zone</Text>
+                  <Text style={styles.navigationDescription}>Data backup and manual adjustments</Text>
+                </View>
               </View>
-              <View style={styles.balanceItem}>
-                <Text style={styles.balanceLabel}>Savings:</Text>
-                <Text style={[styles.balanceAmount, { color: Colors.light.success }]}>
-                  ${currentSavingsTotal.toFixed(2)}
-                </Text>
-              </View>
+              <ChevronRight size={20} color={Colors.light.textSecondary} />
             </View>
-            <Pressable
-              style={styles.deductButton}
-              onPress={() => setModalType('adjust')}
-            >
-              <Text style={styles.deductButtonText}>Adjust Totals</Text>
-            </Pressable>
-          </View>
+          </Pressable>
         </View>
       </ScrollView>
-
-      <Modal
-        visible={modalType === 'adjust'}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setModalType(null)}
-      >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.modalOverlay}
-        >
-          <Pressable style={styles.modalOverlay} onPress={() => setModalType(null)}>
-            <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
-              <Text style={styles.modalTitle}>Adjust Balance</Text>
-              <Text style={styles.modalDescription}>
-                Set a new total for your spending or savings balance
-              </Text>
-
-              <Text style={styles.label}>Adjust</Text>
-              <View style={styles.optionsRow}>
-                <Pressable
-                  style={[
-                    styles.optionButton,
-                    adjustTarget === 'spending' && styles.optionButtonActive,
-                  ]}
-                  onPress={() => setAdjustTarget('spending')}
-                >
-                  <Text
-                    style={[
-                      styles.optionButtonText,
-                      adjustTarget === 'spending' && styles.optionButtonTextActive,
-                    ]}
-                  >
-                    Spending
-                  </Text>
-                </Pressable>
-                <Pressable
-                  style={[
-                    styles.optionButton,
-                    adjustTarget === 'savings' && styles.optionButtonActive,
-                  ]}
-                  onPress={() => setAdjustTarget('savings')}
-                >
-                  <Text
-                    style={[
-                      styles.optionButtonText,
-                      adjustTarget === 'savings' && styles.optionButtonTextActive,
-                    ]}
-                  >
-                    Savings
-                  </Text>
-                </Pressable>
-              </View>
-
-              <View style={styles.currentBalanceCard}>
-                <Text style={styles.currentBalanceLabel}>Current {adjustTarget}:</Text>
-                <Text style={styles.currentBalanceAmount}>
-                  ${(adjustTarget === 'spending' ? currentSpendingTotal : currentSavingsTotal).toFixed(2)}
-                </Text>
-              </View>
-
-              <Text style={styles.label}>New Amount</Text>
-              <TextInput
-                ref={amountInputRef}
-                style={styles.input}
-                placeholder="0.00"
-                value={adjustAmount}
-                onChangeText={setAdjustAmount}
-                keyboardType="decimal-pad"
-                returnKeyType="done"
-                onSubmitEditing={handleAdjustConfirm}
-              />
-
-              <View style={styles.warningCard}>
-                <Text style={styles.warningText}>
-                  ⚠️ This will set your {adjustTarget} balance to the amount entered.
-                </Text>
-              </View>
-
-              <View style={styles.modalActions}>
-                <Pressable
-                  style={styles.cancelButton}
-                  onPress={() => {
-                    setModalType(null);
-                    setAdjustAmount('');
-                  }}
-                >
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
-                </Pressable>
-                <Pressable style={styles.confirmButton} onPress={handleAdjustConfirm}>
-                  <Text style={styles.confirmButtonText}>Confirm</Text>
-                </Pressable>
-              </View>
-            </Pressable>
-          </Pressable>
-        </KeyboardAvoidingView>
-      </Modal>
 
       <Modal
         visible={modalType === 'household' || modalType === 'edit-household'}
@@ -745,40 +523,7 @@ const styles = StyleSheet.create({
     color: Colors.light.text,
     lineHeight: 18,
   },
-  balanceRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 16,
-    marginBottom: 12,
-  },
-  balanceItem: {
-    flex: 1,
-    backgroundColor: Colors.light.background,
-    borderRadius: 12,
-    padding: 12,
-    alignItems: 'center',
-  },
-  balanceLabel: {
-    fontSize: 12,
-    color: Colors.light.textSecondary,
-    marginBottom: 4,
-    fontWeight: '600' as const,
-  },
-  balanceAmount: {
-    fontSize: 18,
-    fontWeight: '700' as const,
-  },
-  deductButton: {
-    backgroundColor: Colors.light.primary,
-    borderRadius: 12,
-    padding: 14,
-    alignItems: 'center',
-  },
-  deductButtonText: {
-    fontSize: 15,
-    fontWeight: '600' as const,
-    color: '#FFFFFF',
-  },
+
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -811,32 +556,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     marginTop: 12,
   },
-  optionsRow: {
-    flexDirection: 'column' as const,
-    gap: 8,
-    marginBottom: 12,
-  },
-  optionButton: {
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    backgroundColor: Colors.light.background,
-    borderWidth: 2,
-    borderColor: Colors.light.border,
-  },
-  optionButtonActive: {
-    backgroundColor: Colors.light.tint,
-    borderColor: Colors.light.tint,
-  },
-  optionButtonText: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: Colors.light.text,
-    textAlign: 'center',
-  },
-  optionButtonTextActive: {
-    color: '#FFFFFF',
-  },
   input: {
     backgroundColor: Colors.light.background,
     borderRadius: 12,
@@ -845,17 +564,6 @@ const styles = StyleSheet.create({
     color: Colors.light.text,
     borderWidth: 1,
     borderColor: Colors.light.border,
-  },
-  warningCard: {
-    backgroundColor: '#FFF3E0',
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 16,
-  },
-  warningText: {
-    fontSize: 13,
-    color: Colors.light.bills,
-    lineHeight: 20,
   },
   modalActions: {
     flexDirection: 'row',
@@ -896,25 +604,6 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: '#FFFFFF',
-  },
-  currentBalanceCard: {
-    backgroundColor: Colors.light.primary,
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 12,
-    marginBottom: 12,
-    alignItems: 'center',
-  },
-  currentBalanceLabel: {
-    fontSize: 14,
-    color: '#FFFFFF',
-    opacity: 0.9,
-    marginBottom: 4,
-  },
-  currentBalanceAmount: {
-    fontSize: 24,
-    fontWeight: '700' as const,
     color: '#FFFFFF',
   },
   householdHeader: {
@@ -1121,26 +810,11 @@ const styles = StyleSheet.create({
   usedForBillsButtonTextActive: {
     color: '#FFFFFF',
   },
-  backupButtonsRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 16,
-  },
-  backupButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: Colors.light.background,
-    borderRadius: 12,
-    padding: 14,
+  dangerNavigationCard: {
+    backgroundColor: Colors.light.cardBackground,
+    borderRadius: 16,
+    padding: 16,
     borderWidth: 2,
-    borderColor: Colors.light.tint,
-  },
-  backupButtonText: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: Colors.light.tint,
+    borderColor: Colors.light.danger,
   },
 });
