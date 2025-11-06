@@ -54,7 +54,7 @@ export default function RootLayout() {
     return (
       <View style={styles.loadingContainer}>
         <Image
-          source={require("@/assets/images/MostBudgetLogo_1.png")}
+          source={{ uri: "https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/rf5f6f8aquhtgzrt3l4f5" }}
           style={styles.loadingLogo}
           resizeMode="contain"
         />
