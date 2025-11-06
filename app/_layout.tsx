@@ -1,9 +1,11 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BudgetProvider } from "@/contexts/BudgetContext";
+import { View, StyleSheet } from "react-native";
+import Colors from "@/constants/colors";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -26,17 +28,48 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
+  const [appIsReady, setAppIsReady] = useState(false);
+
   useEffect(() => {
-    SplashScreen.hideAsync();
+    async function prepare() {
+      try {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      } catch (e) {
+        console.warn(e);
+      } finally {
+        setAppIsReady(true);
+      }
+    }
+
+    prepare();
   }, []);
+
+  useEffect(() => {
+    if (appIsReady) {
+      SplashScreen.hideAsync();
+    }
+  }, [appIsReady]);
+
+  if (!appIsReady) {
+    return null;
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
       <BudgetProvider>
-        <GestureHandlerRootView>
-          <RootLayoutNav />
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <View style={styles.container}>
+            <RootLayoutNav />
+          </View>
         </GestureHandlerRootView>
       </BudgetProvider>
     </QueryClientProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.light.primary,
+  },
+});

@@ -2,7 +2,7 @@ import Colors from '@/constants/colors';
 import { useBudget } from '@/contexts/BudgetContext';
 import type { ExpenseItem, Income } from '@/types/budget';
 import { EXPENSE_CATEGORIES } from '@/types/budget';
-import { Edit, Plus, Trash2 } from 'lucide-react-native';
+import { ArrowDown, ArrowUp, Edit, Plus, Trash2 } from 'lucide-react-native';
 import { useRef, useState } from 'react';
 import {
   Alert,
@@ -22,7 +22,7 @@ type ModalType = 'income' | 'expense' | 'edit-income' | 'edit-expense' | null;
 type EditItem = Income | ExpenseItem | null;
 
 export default function BudgetSetupScreen() {
-  const { income, expenses, addIncome, deleteIncome, addExpense, deleteExpense, updateIncome, updateExpense, householdMembers, maxIncomeLimit, maxExpenseLimit } = useBudget();
+  const { income, expenses, addIncome, deleteIncome, addExpense, deleteExpense, updateIncome, updateExpense, reorderExpenses, householdMembers, maxIncomeLimit, maxExpenseLimit } = useBudget();
   const [modalType, setModalType] = useState<ModalType>(null);
   const [editingItem, setEditingItem] = useState<EditItem>(null);
   
@@ -190,6 +190,20 @@ export default function BudgetSetupScreen() {
   const totalMonthlyIncome = income.reduce((sum, item) => sum + item.amount, 0);
   const totalMonthlyExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
 
+  const moveExpenseUp = (index: number) => {
+    if (index === 0) return;
+    const newExpenses = [...expenses];
+    [newExpenses[index - 1], newExpenses[index]] = [newExpenses[index], newExpenses[index - 1]];
+    reorderExpenses(newExpenses);
+  };
+
+  const moveExpenseDown = (index: number) => {
+    if (index === expenses.length - 1) return;
+    const newExpenses = [...expenses];
+    [newExpenses[index], newExpenses[index + 1]] = [newExpenses[index + 1], newExpenses[index]];
+    reorderExpenses(newExpenses);
+  };
+
   const incomeFrequencies: { value: Income['frequency']; label: string }[] = [
     { value: 'weekly', label: 'Weekly' },
     { value: 'biweekly', label: 'Bi-weekly' },
@@ -280,15 +294,24 @@ export default function BudgetSetupScreen() {
             </Pressable>
           </View>
           <View style={styles.list}>
-            {expenses
-              .sort((a, b) => {
-                if (a.dueDay && b.dueDay) return a.dueDay - b.dueDay;
-                if (a.dueDay) return -1;
-                if (b.dueDay) return 1;
-                return a.name.localeCompare(b.name);
-              })
-              .map((expense) => (
+            {expenses.map((expense, index) => (
                 <View key={expense.id} style={styles.itemCard}>
+                  <View style={styles.reorderButtons}>
+                    <Pressable
+                      style={[styles.reorderButton, index === 0 && styles.reorderButtonDisabled]}
+                      onPress={() => moveExpenseUp(index)}
+                      disabled={index === 0}
+                    >
+                      <ArrowUp size={16} color={index === 0 ? Colors.light.tabIconDefault : Colors.light.tint} />
+                    </Pressable>
+                    <Pressable
+                      style={[styles.reorderButton, index === expenses.length - 1 && styles.reorderButtonDisabled]}
+                      onPress={() => moveExpenseDown(index)}
+                      disabled={index === expenses.length - 1}
+                    >
+                      <ArrowDown size={16} color={index === expenses.length - 1 ? Colors.light.tabIconDefault : Colors.light.tint} />
+                    </Pressable>
+                  </View>
                   <View style={styles.itemInfo}>
                     <Text style={styles.itemName}>{expense.name}</Text>
                     <Text style={styles.itemMeta}>
@@ -965,5 +988,17 @@ const styles = StyleSheet.create({
     color: Colors.light.textSecondary,
     marginTop: 8,
     lineHeight: 16,
+  },
+  reorderButtons: {
+    flexDirection: 'column',
+    gap: 4,
+    marginRight: 8,
+  },
+  reorderButton: {
+    padding: 4,
+    borderRadius: 4,
+  },
+  reorderButtonDisabled: {
+    opacity: 0.3,
   },
 });

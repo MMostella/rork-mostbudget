@@ -18,17 +18,7 @@ export default function BillsScreen() {
   const budgetSummary = getBudgetSummary();
   const remainingBalance = budgetSummary.totalIncome - billsSummary.totalPaid;
 
-  const sortedExpenses = [...expenses].sort((a, b) => {
-    const statusA = getExpensePaymentStatus(a.id);
-    const statusB = getExpensePaymentStatus(b.id);
-    
-    if (statusA.status === 'unpaid' && statusB.status !== 'unpaid') return -1;
-    if (statusA.status !== 'unpaid' && statusB.status === 'unpaid') return 1;
-    if (statusA.status === 'partially-paid' && statusB.status === 'paid') return -1;
-    if (statusA.status === 'paid' && statusB.status === 'partially-paid') return 1;
-    
-    return a.name.localeCompare(b.name);
-  });
+  const sortedExpenses = [...expenses];
 
   return (
     <View style={styles.container}>

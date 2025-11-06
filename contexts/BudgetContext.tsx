@@ -157,6 +157,7 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
 
   const saveExpenses = async (newExpenses: ExpenseItem[]) => {
     try {
+      console.log('Saving expenses to AsyncStorage:', newExpenses);
       await AsyncStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(newExpenses));
       setExpenses(newExpenses);
     } catch (error) {
@@ -200,6 +201,11 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
     );
     saveExpenses(updated);
   }, [expenses]);
+
+  const reorderExpenses = useCallback((newExpensesOrder: ExpenseItem[]) => {
+    console.log('Reordering expenses:', newExpensesOrder);
+    saveExpenses(newExpensesOrder);
+  }, []);
 
   const deleteExpense = useCallback((id: string) => {
     const updated = expenses.filter((item) => item.id !== id);
@@ -636,6 +642,7 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
       addExpense,
       updateExpense,
       deleteExpense,
+      reorderExpenses,
       addPaycheck,
       updatePaycheck,
       deletePaycheck,
@@ -676,6 +683,7 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
       addExpense,
       updateExpense,
       deleteExpense,
+      reorderExpenses,
       addPaycheck,
       updatePaycheck,
       deletePaycheck,
