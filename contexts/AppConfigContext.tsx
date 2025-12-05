@@ -113,6 +113,8 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
     queryFn: fetchAllConfigs,
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
+    retry: 1,
+    retryDelay: 1000,
   });
 
   const checkForNewPopup = useCallback(async () => {
