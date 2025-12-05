@@ -141,7 +141,14 @@ export default function DangerZoneScreen() {
           <View style={styles.settingCard}>
             <Text style={styles.settingLabel}>Current Version</Text>
             <Pressable onPress={handleVersionPress}>
-              <Text style={styles.versionText}>{config.main?.data?.currentAppVersion || config.data?.currentAppVersion || config.data?.appVersion || '1.0.0'}</Text>
+              <Text style={styles.versionText}>{(() => {
+                const mainData = config?.main?.data;
+                if (Array.isArray(mainData)) {
+                  const versionItem = mainData.find((item: any) => item.key === 'currentAppVersion');
+                  return versionItem?.value || '1.0.0';
+                }
+                return config.main?.data?.currentAppVersion || config.data?.currentAppVersion || config.data?.appVersion || '1.0.0';
+              })()}</Text>
             </Pressable>
             {showDebugOption && (
               <Pressable
