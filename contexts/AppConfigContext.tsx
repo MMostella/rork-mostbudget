@@ -6,14 +6,17 @@ import { Alert, Linking, Modal, Pressable, StyleSheet, Text, View } from 'react-
 import Colors from '@/constants/colors';
 
 export type AppConfig = {
-  appVersion: string;
-  currentAppVersion?: string;
-  spendingPercentDefault: number;
-  savingPercentDefault: number;
-  featureTithes: boolean;
-  appLogoURL: string;
-  urlBuyMeACoffee?: string;
-  [key: string]: string | number | boolean | undefined;
+  data: {
+    appVersion: string;
+    currentAppVersion?: string;
+    spendingPercentDefault: number;
+    savingPercentDefault: number;
+    featureTithes: boolean;
+    appLogoURL: string;
+    urlBuyMeACoffee?: string;
+    [key: string]: string | number | boolean | undefined;
+  };
+  [key: string]: any;
 };
 
 export type PopupConfig = {
@@ -73,11 +76,13 @@ const fetchConfig = async (configType: string, storageKey: string, fallback: any
 const fetchAllConfigs = async (): Promise<AllConfigs> => {
   const [main, popups, reminders] = await Promise.all([
     fetchConfig('AppConfig_Main', STORAGE_KEY, {
-      appVersion: '1.0.0',
-      spendingPercentDefault: 60,
-      savingPercentDefault: 40,
-      featureTithes: true,
-      appLogoURL: 'https://rork.app/pa/6g6ixd11m2bjzy28nn7jh/logo',
+      data: {
+        appVersion: '1.0.0',
+        spendingPercentDefault: 60,
+        savingPercentDefault: 40,
+        featureTithes: true,
+        appLogoURL: 'https://rork.app/pa/6g6ixd11m2bjzy28nn7jh/logo',
+      },
     }),
     fetchConfig('Popups', POPUPS_STORAGE_KEY, {
       messageVersion: '0',
@@ -141,7 +146,7 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
   }, [data?.popups?.messageVersion]);
 
   const handleBuyMeACoffee = useCallback(async () => {
-    const url = data?.main?.urlBuyMeACoffee as string | undefined;
+    const url = data?.main?.data?.urlBuyMeACoffee as string | undefined;
     if (url) {
       try {
         const supported = await Linking.canOpenURL(url);
@@ -154,7 +159,7 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
         console.error('Error opening Buy Me a Coffee link:', error);
       }
     }
-  }, [data?.main?.urlBuyMeACoffee]);
+  }, [data?.main?.data?.urlBuyMeACoffee]);
 
   const refetchConfig = useCallback(async () => {
     await refetch();
@@ -177,7 +182,7 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
             <Text style={popupStyles.support}>{data.popups.support}</Text>
 
             <View style={popupStyles.buttonContainer}>
-              {data.popups.link && data.main?.urlBuyMeACoffee && (
+              {data.popups.link && data.main?.data?.urlBuyMeACoffee && (
                 <Pressable
                   style={popupStyles.coffeeButton}
                   onPress={handleBuyMeACoffee}
@@ -202,19 +207,23 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
   return useMemo(
     () => ({
       config: data?.main ?? {
-        appVersion: '1.0.0',
-        spendingPercentDefault: 60,
-        savingPercentDefault: 40,
-        featureTithes: true,
-        appLogoURL: 'https://rork.app/pa/6g6ixd11m2bjzy28nn7jh/logo',
-      },
-      allConfigs: data ?? {
-        main: {
+        data: {
           appVersion: '1.0.0',
           spendingPercentDefault: 60,
           savingPercentDefault: 40,
           featureTithes: true,
           appLogoURL: 'https://rork.app/pa/6g6ixd11m2bjzy28nn7jh/logo',
+        },
+      },
+      allConfigs: data ?? {
+        main: {
+          data: {
+            appVersion: '1.0.0',
+            spendingPercentDefault: 60,
+            savingPercentDefault: 40,
+            featureTithes: true,
+            appLogoURL: 'https://rork.app/pa/6g6ixd11m2bjzy28nn7jh/logo',
+          },
         },
         popups: {
           messageVersion: '0',

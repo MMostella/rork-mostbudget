@@ -136,7 +136,7 @@ export default function DebugConfigScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>AppConfig_Main</Text>
           <View style={styles.configCard}>
-            {Object.entries(config).map(([key, value]) => (
+            {config.data && Object.entries(config.data).map(([key, value]) => (
               <View key={key} style={styles.configRow}>
                 <Text style={styles.configKey}>{key}</Text>
                 <Text style={styles.configValue}>
