@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
 import { useQuery } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Linking, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, View, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import Colors from '@/constants/colors';
 
 export type AppConfig = {
@@ -108,6 +108,7 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
   const [lastFetchTime, setLastFetchTime] = useState<Date | null>(null);
   const [showPopup, setShowPopup] = useState(false);
   const [popupDismissed, setPopupDismissed] = useState(false);
+  const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
 
   const configQuery = useQuery({
     queryKey: ['appConfig'],
@@ -144,17 +145,33 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
   }, [data, checkForNewPopup]);
 
   const dismissPopup = useCallback(async () => {
+    if (!hasScrolledToBottom) {
+      Alert.alert('Please Read', 'Please scroll to the bottom to continue.');
+      return;
+    }
     setShowPopup(false);
     setPopupDismissed(true);
+    setHasScrolledToBottom(false);
     const messageVersion = (data?.popups?.popup?.messageVersion || data?.popups?.messageVersion) as string | undefined;
     if (messageVersion) {
       await AsyncStorage.setItem(LAST_POPUP_VERSION_KEY, messageVersion);
       console.log('Popup dismissed, saved version:', messageVersion);
     }
-  }, [data?.popups]);
+  }, [data?.popups, hasScrolledToBottom]);
 
   const handleBuyMeACoffee = useCallback(async () => {
-    const url = data?.main?.data?.urlBuyMeACoffee as string | undefined;
+    let url: string | undefined;
+    
+    if (data?.main?.main?.data) {
+      const dataArray = data.main.main.data;
+      const urlBuyMeACoffeeItem = dataArray.find((item: any) => item.key === 'urlBuyMeACoffee');
+      url = urlBuyMeACoffeeItem?.value;
+    } else if (data?.main?.data?.urlBuyMeACoffee) {
+      url = data.main.data.urlBuyMeACoffee as string;
+    }
+
+    console.log('Buy Me a Coffee URL:', url);
+
     if (url) {
       try {
         const supported = await Linking.canOpenURL(url);
@@ -166,23 +183,46 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
       } catch (error) {
         console.error('Error opening Buy Me a Coffee link:', error);
       }
+    } else {
+      console.log('No Buy Me a Coffee URL found');
     }
-  }, [data?.main?.data?.urlBuyMeACoffee]);
+  }, [data?.main]);
 
   const refetchConfig = useCallback(async () => {
     await refetch();
   }, [refetch]);
 
+  const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+    const isAtBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - 20;
+    
+    if (isAtBottom && !hasScrolledToBottom) {
+      setHasScrolledToBottom(true);
+      console.log('User has scrolled to bottom');
+    }
+  }, [hasScrolledToBottom]);
+
   const PopupModal = useCallback(() => {
     if (!showPopup || !data?.popups) return null;
 
     const popupData = data.popups.popup || data.popups;
-    const shouldShowButton = popupData.link === true && data.main?.data?.urlBuyMeACoffee;
+    
+    let urlBuyMeACoffee: string | undefined;
+    if (data?.main?.main?.data) {
+      const dataArray = data.main.main.data;
+      const urlBuyMeACoffeeItem = dataArray.find((item: any) => item.key === 'urlBuyMeACoffee');
+      urlBuyMeACoffee = urlBuyMeACoffeeItem?.value;
+    } else if (data?.main?.data?.urlBuyMeACoffee) {
+      urlBuyMeACoffee = data.main.data.urlBuyMeACoffee as string;
+    }
+
+    const shouldShowButton = popupData.link === true && urlBuyMeACoffee;
 
     console.log('Popup modal rendering:', {
       link: popupData.link,
       shouldShowButton,
-      urlBuyMeACoffee: data.main?.data?.urlBuyMeACoffee,
+      urlBuyMeACoffee,
+      hasScrolledToBottom,
     });
 
     return (
@@ -194,9 +234,17 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
       >
         <View style={popupStyles.overlay}>
           <View style={popupStyles.modal}>
-            <Text style={popupStyles.title}>{popupData.title}</Text>
-            <Text style={popupStyles.body}>{popupData.body}</Text>
-            <Text style={popupStyles.support}>{popupData.support}</Text>
+            <ScrollView 
+              style={popupStyles.scrollView}
+              contentContainerStyle={popupStyles.scrollContent}
+              onScroll={handleScroll}
+              scrollEventThrottle={16}
+              showsVerticalScrollIndicator={true}
+            >
+              <Text style={popupStyles.title}>{popupData.title}</Text>
+              <Text style={popupStyles.body}>{popupData.body}</Text>
+              <Text style={popupStyles.support}>{popupData.support}</Text>
+            </ScrollView>
 
             <View style={popupStyles.buttonContainer}>
               {shouldShowButton && (
@@ -209,17 +257,25 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
               )}
 
               <Pressable
-                style={popupStyles.dismissButton}
+                style={[
+                  popupStyles.dismissButton,
+                  !hasScrolledToBottom && popupStyles.dismissButtonDisabled
+                ]}
                 onPress={dismissPopup}
               >
-                <Text style={popupStyles.dismissButtonText}>Close</Text>
+                <Text style={[
+                  popupStyles.dismissButtonText,
+                  !hasScrolledToBottom && popupStyles.dismissButtonTextDisabled
+                ]}>
+                  {hasScrolledToBottom ? 'Close' : 'Scroll to Close'}
+                </Text>
               </Pressable>
             </View>
           </View>
         </View>
       </Modal>
     );
-  }, [showPopup, data, dismissPopup, handleBuyMeACoffee]);
+  }, [showPopup, data, dismissPopup, handleBuyMeACoffee, hasScrolledToBottom, handleScroll]);
 
   return useMemo(
     () => ({
@@ -275,11 +331,18 @@ const popupStyles = StyleSheet.create({
     padding: 28,
     width: '100%',
     maxWidth: 400,
+    maxHeight: '80%',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 16,
     elevation: 10,
+  },
+  scrollView: {
+    maxHeight: 400,
+  },
+  scrollContent: {
+    paddingBottom: 16,
   },
   title: {
     fontSize: 24,
@@ -304,6 +367,7 @@ const popupStyles = StyleSheet.create({
   },
   buttonContainer: {
     gap: 12,
+    marginTop: 16,
   },
   coffeeButton: {
     backgroundColor: Colors.light.tint,
@@ -324,9 +388,15 @@ const popupStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.light.border,
   },
+  dismissButtonDisabled: {
+    opacity: 0.5,
+  },
   dismissButtonText: {
     fontSize: 16,
     fontWeight: '600' as const,
     color: Colors.light.text,
+  },
+  dismissButtonTextDisabled: {
+    color: Colors.light.textSecondary,
   },
 });
