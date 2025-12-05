@@ -150,6 +150,17 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
     }
   }, [data?.popups]);
 
+  const websiteUrl = useMemo(() => {
+    if (data?.main?.main?.data) {
+      const dataArray = data.main.main.data;
+      const urlWebsiteItem = dataArray.find((item: any) => item.key === 'urlWebsite');
+      return urlWebsiteItem?.value || 'https://mostbudget.my.canva.site/info';
+    } else if (data?.main?.data?.urlWebsite) {
+      return data.main.data.urlWebsite as string;
+    }
+    return 'https://mostbudget.my.canva.site/info';
+  }, [data?.main]);
+
   const handleBuyMeACoffee = useCallback(async () => {
     let url: string | undefined;
     
@@ -242,6 +253,7 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
       isError,
       lastFetchTime,
       refetchConfig,
+      websiteUrl,
       popupState: {
         showPopup,
         popupModalData,
@@ -249,7 +261,7 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
         handleBuyMeACoffee,
       },
     }),
-    [data, isLoading, isError, lastFetchTime, refetchConfig, showPopup, popupModalData, dismissPopup, handleBuyMeACoffee]
+    [data, isLoading, isError, lastFetchTime, refetchConfig, websiteUrl, showPopup, popupModalData, dismissPopup, handleBuyMeACoffee]
   );
 });
 

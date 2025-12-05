@@ -3,9 +3,11 @@ import { router } from 'expo-router';
 import { X } from 'lucide-react-native';
 import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAppConfig } from '@/contexts/AppConfigContext';
 
 export default function GetStartedScreen() {
   const insets = useSafeAreaInsets();
+  const { websiteUrl } = useAppConfig();
 
   return (
     <View style={styles.container}>
@@ -70,7 +72,7 @@ export default function GetStartedScreen() {
             You can find the Privacy Policy, iOS download link, and ways to support the developer at:
           </Text>
           <TouchableOpacity 
-            onPress={() => Linking.openURL('https://mostbudget.my.canva.site/info')}
+            onPress={() => Linking.openURL(websiteUrl)}
             style={styles.linkButton}
           >
             <Text style={styles.linkText}>MostBudget Website</Text>
