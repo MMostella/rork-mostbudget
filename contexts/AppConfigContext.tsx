@@ -155,16 +155,23 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
   const websiteUrl = useMemo(() => {
     console.log('websiteUrl computation - full data.main:', JSON.stringify(data?.main, null, 2));
     
-    if (data?.main?.data?.urlWebsite) {
-      console.log('Found data.main.data.urlWebsite:', data.main.data.urlWebsite);
-      return data.main.data.urlWebsite as string;
+    if (data?.main?.data && Array.isArray(data.main.data)) {
+      const urlItem = data.main.data.find((item: any) => item.key === 'urlWebsite');
+      if (urlItem?.value) {
+        console.log('Found urlWebsite in array:', urlItem.value);
+        return urlItem.value as string;
+      }
     }
     console.log('Using fallback URL');
     return 'https://mostbudget.my.canva.site/info';
   }, [data?.main]);
 
   const handleBuyMeACoffee = useCallback(async () => {
-    const url = data?.main?.data?.urlBuyMeACoffee as string | undefined;
+    let url: string | undefined;
+    if (data?.main?.data && Array.isArray(data.main.data)) {
+      const urlItem = data.main.data.find((item: any) => item.key === 'urlBuyMeACoffee');
+      url = urlItem?.value as string | undefined;
+    }
 
     console.log('Buy Me a Coffee URL:', url);
 
@@ -192,7 +199,11 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
     if (!data?.popups) return null;
 
     const popupData = data.popups.popup || data.popups;
-    const urlBuyMeACoffee = data?.main?.data?.urlBuyMeACoffee as string | undefined;
+    let urlBuyMeACoffee: string | undefined;
+    if (data?.main?.data && Array.isArray(data.main.data)) {
+      const urlItem = data.main.data.find((item: any) => item.key === 'urlBuyMeACoffee');
+      urlBuyMeACoffee = urlItem?.value as string | undefined;
+    }
 
     console.log('Popup modal data:', { popupData, urlBuyMeACoffee, linkField: popupData.link });
 
