@@ -145,7 +145,7 @@ export default function DangerZoneScreen() {
                 const mainData = config?.main?.data;
                 if (Array.isArray(mainData)) {
                   const versionItem = mainData.find((item: any) => item.key === 'currentAppVersion');
-                  return versionItem?.value || '1.0.0';
+                  return versionItem?.value || 'null';
                 }
                 return config.main?.data?.currentAppVersion || config.data?.currentAppVersion || config.data?.appVersion || '1.0.0';
               })()}</Text>
