@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
 import { useQuery } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Linking, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
+import { Linking } from 'react-native';
 
 export type AppConfig = {
   data: {
@@ -107,7 +107,6 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
   const [lastFetchTime, setLastFetchTime] = useState<Date | null>(null);
   const [showPopup, setShowPopup] = useState(false);
   const [popupDismissed, setPopupDismissed] = useState(false);
-  const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
 
   const configQuery = useQuery({
     queryKey: ['appConfig'],
@@ -144,19 +143,14 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
   }, [data, checkForNewPopup]);
 
   const dismissPopup = useCallback(async () => {
-    if (!hasScrolledToBottom) {
-      Alert.alert('Please Read', 'Please scroll to the bottom to continue.');
-      return;
-    }
     setShowPopup(false);
     setPopupDismissed(true);
-    setHasScrolledToBottom(false);
     const messageVersion = (data?.popups?.popup?.messageVersion || data?.popups?.messageVersion) as string | undefined;
     if (messageVersion) {
       await AsyncStorage.setItem(LAST_POPUP_VERSION_KEY, messageVersion);
       console.log('Popup dismissed, saved version:', messageVersion);
     }
-  }, [data?.popups, hasScrolledToBottom]);
+  }, [data?.popups]);
 
   const handleBuyMeACoffee = useCallback(async () => {
     let url: string | undefined;
@@ -177,7 +171,7 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
         if (supported) {
           await Linking.openURL(url);
         } else {
-          Alert.alert('Error', 'Unable to open the link');
+          console.log('Unable to open the link');
         }
       } catch (error) {
         console.error('Error opening Buy Me a Coffee link:', error);
@@ -191,15 +185,7 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
     await refetch();
   }, [refetch]);
 
-  const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
-    const isAtBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - 20;
-    
-    if (isAtBottom && !hasScrolledToBottom) {
-      setHasScrolledToBottom(true);
-      console.log('User has scrolled to bottom');
-    }
-  }, [hasScrolledToBottom]);
+
 
   const popupModalData = useMemo(() => {
     if (!data?.popups) return null;
@@ -214,6 +200,8 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
     } else if (data?.main?.data?.urlBuyMeACoffee) {
       urlBuyMeACoffee = data.main.data.urlBuyMeACoffee as string;
     }
+
+    console.log('Popup modal data:', { popupData, urlBuyMeACoffee, linkField: popupData.link });
 
     return {
       popupData,
@@ -261,11 +249,9 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
         popupModalData,
         dismissPopup,
         handleBuyMeACoffee,
-        hasScrolledToBottom,
-        handleScroll,
       },
     }),
-    [data, isLoading, isError, lastFetchTime, refetchConfig, showPopup, popupModalData, dismissPopup, handleBuyMeACoffee, hasScrolledToBottom, handleScroll]
+    [data, isLoading, isError, lastFetchTime, refetchConfig, showPopup, popupModalData, dismissPopup, handleBuyMeACoffee]
   );
 });
 

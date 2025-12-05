@@ -20,8 +20,6 @@ function PopupModal() {
     popupModalData,
     dismissPopup,
     handleBuyMeACoffee,
-    hasScrolledToBottom,
-    handleScroll,
   } = popupState;
 
   if (!showPopup || !popupModalData) return null;
@@ -40,8 +38,6 @@ function PopupModal() {
           <ScrollView
             style={popupStyles.scrollView}
             contentContainerStyle={popupStyles.scrollContent}
-            onScroll={handleScroll}
-            scrollEventThrottle={16}
             showsVerticalScrollIndicator={true}
           >
             <Text style={popupStyles.title}>{popupData.title}</Text>
@@ -60,19 +56,11 @@ function PopupModal() {
             )}
 
             <Pressable
-              style={[
-                popupStyles.dismissButton,
-                !hasScrolledToBottom && popupStyles.dismissButtonDisabled,
-              ]}
+              style={popupStyles.dismissButton}
               onPress={dismissPopup}
             >
-              <Text
-                style={[
-                  popupStyles.dismissButtonText,
-                  !hasScrolledToBottom && popupStyles.dismissButtonTextDisabled,
-                ]}
-              >
-                {hasScrolledToBottom ? "Close" : "Scroll to Close"}
+              <Text style={popupStyles.dismissButtonText}>
+                Close
               </Text>
             </Pressable>
           </View>
@@ -245,15 +233,9 @@ const popupStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.light.border,
   },
-  dismissButtonDisabled: {
-    opacity: 0.5,
-  },
   dismissButtonText: {
     fontSize: 16,
     fontWeight: "600" as const,
     color: Colors.light.text,
-  },
-  dismissButtonTextDisabled: {
-    color: Colors.light.textSecondary,
   },
 });
