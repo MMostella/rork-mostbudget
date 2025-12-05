@@ -1,6 +1,7 @@
 import Colors from '@/constants/colors';
 import { useBudget } from '@/contexts/BudgetContext';
-import { AlertTriangle, ChevronLeft, Download, Upload } from 'lucide-react-native';
+import { useAppConfig } from '@/contexts/AppConfigContext';
+import { AlertTriangle, ChevronLeft, Download, Upload, Bug } from 'lucide-react-native';
 import { router } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
 import BackupService from '@/src/services/BackupService';
@@ -17,9 +18,26 @@ import { useState, useRef } from 'react';
 
 export default function DangerZoneScreen() {
   const { currentSpendingTotal, currentSavingsTotal, setSpendingOrSavingsTotal } = useBudget();
+  const { config } = useAppConfig();
   const [adjustAmount, setAdjustAmount] = useState('');
   const [adjustTarget, setAdjustTarget] = useState<'spending' | 'savings'>('spending');
+  const [versionTapCount, setVersionTapCount] = useState(0);
+  const [showDebugOption, setShowDebugOption] = useState(false);
   const amountInputRef = useRef<TextInput>(null);
+
+  const handleVersionPress = () => {
+    const newCount = versionTapCount + 1;
+    setVersionTapCount(newCount);
+
+    if (newCount === 5) {
+      setShowDebugOption(true);
+      Alert.alert('Debug Mode', 'Debug option unlocked!');
+    }
+
+    setTimeout(() => {
+      setVersionTapCount(0);
+    }, 2000);
+  };
 
   const handleExportData = async () => {
     try {
@@ -117,6 +135,26 @@ export default function DangerZoneScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>App Information</Text>
+
+          <View style={styles.settingCard}>
+            <Text style={styles.settingLabel}>Current Version</Text>
+            <Pressable onPress={handleVersionPress}>
+              <Text style={styles.versionText}>{config.appVersion}</Text>
+            </Pressable>
+            {showDebugOption && (
+              <Pressable
+                style={styles.debugButton}
+                onPress={() => router.push('/debug-config')}
+              >
+                <Bug size={18} color={Colors.light.tint} />
+                <Text style={styles.debugButtonText}>View AppConfig Debug</Text>
+              </Pressable>
+            )}
+          </View>
+        </View>
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Data Backup</Text>
 
@@ -437,5 +475,28 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600' as const,
     color: '#FFFFFF',
+  },
+  versionText: {
+    fontSize: 18,
+    fontWeight: '600' as const,
+    color: Colors.light.tint,
+    marginTop: 8,
+  },
+  debugButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: Colors.light.background,
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 2,
+    borderColor: Colors.light.tint,
+    marginTop: 16,
+  },
+  debugButtonText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.light.tint,
   },
 });

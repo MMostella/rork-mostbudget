@@ -4,6 +4,7 @@ import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BudgetProvider } from "@/contexts/BudgetContext";
+import { AppConfigProvider } from "@/contexts/AppConfigContext";
 import { View, StyleSheet, Image } from "react-native";
 import Colors from "@/constants/colors";
 
@@ -18,6 +19,13 @@ function RootLayoutNav() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen
         name="get-started"
+        options={{
+          presentation: "modal",
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="debug-config"
         options={{
           presentation: "modal",
           headerShown: false,
@@ -64,13 +72,15 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <BudgetProvider>
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <View style={styles.container}>
-            <RootLayoutNav />
-          </View>
-        </GestureHandlerRootView>
-      </BudgetProvider>
+      <AppConfigProvider>
+        <BudgetProvider>
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <View style={styles.container}>
+              <RootLayoutNav />
+            </View>
+          </GestureHandlerRootView>
+        </BudgetProvider>
+      </AppConfigProvider>
     </QueryClientProvider>
   );
 }

@@ -13,51 +13,32 @@ export type AppConfig = {
 };
 
 const STORAGE_KEY = '@app_config';
-const CONFIG_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSnymv07J_HgzaNmmstf410WD_bi5S6m_L_tbwjpF3CTlopu_cY7p1BFBS-FFZQf173IeLDVIxg1JbU/pub?output=csv';
-
-const parseCSVToConfig = (csvText: string): AppConfig => {
-  const lines = csvText.trim().split('\n');
-  const config: any = {};
-
-  for (const line of lines) {
-    const [key, value] = line.split(',').map(s => s.trim());
-    
-    if (!key || !value) continue;
-
-    if (value.toLowerCase() === 'true') {
-      config[key] = true;
-    } else if (value.toLowerCase() === 'false') {
-      config[key] = false;
-    } else if (!isNaN(Number(value)) && value !== '') {
-      config[key] = Number(value);
-    } else {
-      config[key] = value;
-    }
-  }
-
-  return config as AppConfig;
-};
+const CONFIG_URL = 'https://script.google.com/macros/s/AKfycbzoSRxVzBh9k7n5LS5sq-oqSwybBaY89zb5gSNZmXBDqVp9JamBeTQHf2yjVB056hCF/exec?config=AppConfig_Main';
 
 const fetchAppConfig = async (): Promise<AppConfig> => {
+  console.log('Fetching app config from:', CONFIG_URL);
   try {
     const response = await fetch(CONFIG_URL);
     if (!response.ok) {
       throw new Error(`Failed to fetch config: ${response.status}`);
     }
-    const csvText = await response.text();
-    const config = parseCSVToConfig(csvText);
+    const config = await response.json();
+    console.log('App config fetched successfully:', config);
     
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+    await AsyncStorage.setItem(STORAGE_KEY + '_timestamp', new Date().toISOString());
     
-    return config;
+    return config as AppConfig;
   } catch (error) {
     console.error('Error fetching app config:', error);
     
     const cachedConfig = await AsyncStorage.getItem(STORAGE_KEY);
     if (cachedConfig) {
+      console.log('Using cached app config');
       return JSON.parse(cachedConfig);
     }
     
+    console.log('Using fallback app config');
     return {
       appVersion: '1.0.0',
       spendingPercentDefault: 60,
