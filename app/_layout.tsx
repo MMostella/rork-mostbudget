@@ -4,7 +4,7 @@ import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BudgetProvider } from "@/contexts/BudgetContext";
-import { AppConfigProvider } from "@/contexts/AppConfigContext";
+import { AppConfigProvider, useAppConfig } from "@/contexts/AppConfigContext";
 import { View, StyleSheet, Image } from "react-native";
 import Colors from "@/constants/colors";
 
@@ -14,24 +14,29 @@ SplashScreen.preventAutoHideAsync();
 const queryClient = new QueryClient();
 
 function RootLayoutNav() {
+  const { PopupModal } = useAppConfig();
+
   return (
-    <Stack screenOptions={{ headerBackTitle: "Back" }}>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen
-        name="get-started"
-        options={{
-          presentation: "modal",
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="debug-config"
-        options={{
-          presentation: "modal",
-          headerShown: false,
-        }}
-      />
-    </Stack>
+    <>
+      <Stack screenOptions={{ headerBackTitle: "Back" }}>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="get-started"
+          options={{
+            presentation: "modal",
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="debug-config"
+          options={{
+            presentation: "modal",
+            headerShown: false,
+          }}
+        />
+      </Stack>
+      <PopupModal />
+    </>
   );
 }
 

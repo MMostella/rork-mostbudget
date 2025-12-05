@@ -14,23 +14,37 @@ import {
 import { useState, useEffect } from 'react';
 
 export default function DebugConfigScreen() {
-  const { config, isLoading, isError, lastFetchTime, refetchConfig } = useAppConfig();
+  const { config, allConfigs, isLoading, isError, lastFetchTime, refetchConfig } = useAppConfig();
   const [cachedTimestamp, setCachedTimestamp] = useState<string | null>(null);
+  const [popupsTimestamp, setPopupsTimestamp] = useState<string | null>(null);
+  const [remindersTimestamp, setRemindersTimestamp] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
-    const loadCachedTimestamp = async () => {
-      const timestamp = await AsyncStorage.getItem('@app_config_timestamp');
-      setCachedTimestamp(timestamp);
+    const loadCachedTimestamps = async () => {
+      const [mainTs, popupsTs, remindersTs] = await Promise.all([
+        AsyncStorage.getItem('@app_config_timestamp'),
+        AsyncStorage.getItem('@app_config_popups_timestamp'),
+        AsyncStorage.getItem('@app_config_reminders_timestamp'),
+      ]);
+      setCachedTimestamp(mainTs);
+      setPopupsTimestamp(popupsTs);
+      setRemindersTimestamp(remindersTs);
     };
-    loadCachedTimestamp();
+    loadCachedTimestamps();
   }, []);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
     await refetchConfig();
-    const timestamp = await AsyncStorage.getItem('@app_config_timestamp');
-    setCachedTimestamp(timestamp);
+    const [mainTs, popupsTs, remindersTs] = await Promise.all([
+      AsyncStorage.getItem('@app_config_timestamp'),
+      AsyncStorage.getItem('@app_config_popups_timestamp'),
+      AsyncStorage.getItem('@app_config_reminders_timestamp'),
+    ]);
+    setCachedTimestamp(mainTs);
+    setPopupsTimestamp(popupsTs);
+    setRemindersTimestamp(remindersTs);
     setIsRefreshing(false);
   };
 
@@ -120,7 +134,7 @@ export default function DebugConfigScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Configuration Data</Text>
+          <Text style={styles.sectionTitle}>AppConfig_Main</Text>
           <View style={styles.configCard}>
             {Object.entries(config).map(([key, value]) => (
               <View key={key} style={styles.configRow}>
@@ -135,14 +149,63 @@ export default function DebugConfigScreen() {
               </View>
             ))}
           </View>
+          {cachedTimestamp && (
+            <Text style={styles.timestampNote}>Cached: {formatDate(cachedTimestamp)}</Text>
+          )}
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Raw JSON</Text>
+          <Text style={styles.sectionTitle}>Popups Config</Text>
+          <View style={styles.configCard}>
+            {Object.entries(allConfigs.popups).map(([key, value]) => (
+              <View key={key} style={styles.configRow}>
+                <Text style={styles.configKey}>{key}</Text>
+                <Text style={styles.configValue}>
+                  {typeof value === 'boolean' 
+                    ? (value ? 'true' : 'false')
+                    : typeof value === 'object'
+                    ? JSON.stringify(value)
+                    : String(value)}
+                </Text>
+              </View>
+            ))}
+          </View>
+          {popupsTimestamp && (
+            <Text style={styles.timestampNote}>Cached: {formatDate(popupsTimestamp)}</Text>
+          )}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Reminders Config</Text>
+          <View style={styles.configCard}>
+            {Object.keys(allConfigs.reminders).length > 0 ? (
+              Object.entries(allConfigs.reminders).map(([key, value]) => (
+                <View key={key} style={styles.configRow}>
+                  <Text style={styles.configKey}>{key}</Text>
+                  <Text style={styles.configValue}>
+                    {typeof value === 'boolean' 
+                      ? (value ? 'true' : 'false')
+                      : typeof value === 'object'
+                      ? JSON.stringify(value)
+                      : String(value)}
+                  </Text>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.emptyText}>No reminders configured</Text>
+            )}
+          </View>
+          {remindersTimestamp && (
+            <Text style={styles.timestampNote}>Cached: {formatDate(remindersTimestamp)}</Text>
+          )}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Raw JSON (All Configs)</Text>
           <View style={styles.jsonCard}>
             <ScrollView horizontal showsHorizontalScrollIndicator={true}>
               <Text style={styles.jsonText}>
-                {JSON.stringify(config, null, 2)}
+                {JSON.stringify(allConfigs, null, 2)}
               </Text>
             </ScrollView>
           </View>
@@ -313,5 +376,17 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#9CDCFE',
     fontFamily: 'monospace',
+  },
+  timestampNote: {
+    fontSize: 12,
+    color: Colors.light.textSecondary,
+    marginTop: 8,
+    fontStyle: 'italic' as const,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: Colors.light.textSecondary,
+    textAlign: 'center',
+    padding: 12,
   },
 });
