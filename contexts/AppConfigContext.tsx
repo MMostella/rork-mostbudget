@@ -194,8 +194,6 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
     await refetch();
   }, [refetch]);
 
-
-
   const popupModalData = useMemo(() => {
     if (!data?.popups) return null;
 
@@ -219,9 +217,18 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
     };
   }, [data]);
 
-  return useMemo(
-    () => ({
-      config: data?.main ?? {
+  return {
+    config: data?.main ?? {
+      data: {
+        appVersion: '1.0.0',
+        spendingPercentDefault: 60,
+        savingPercentDefault: 40,
+        featureTithes: true,
+        appLogoURL: 'https://rork.app/pa/6g6ixd11m2bjzy28nn7jh/logo',
+      },
+    },
+    allConfigs: data ?? {
+      main: {
         data: {
           appVersion: '1.0.0',
           spendingPercentDefault: 60,
@@ -230,39 +237,27 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
           appLogoURL: 'https://rork.app/pa/6g6ixd11m2bjzy28nn7jh/logo',
         },
       },
-      allConfigs: data ?? {
-        main: {
-          data: {
-            appVersion: '1.0.0',
-            spendingPercentDefault: 60,
-            savingPercentDefault: 40,
-            featureTithes: true,
-            appLogoURL: 'https://rork.app/pa/6g6ixd11m2bjzy28nn7jh/logo',
-          },
-        },
-        popups: {
-          messageVersion: '0',
-          title: '',
-          body: '',
-          support: '',
-          link: false,
-        },
-        reminders: {},
+      popups: {
+        messageVersion: '0',
+        title: '',
+        body: '',
+        support: '',
+        link: false,
       },
-      isLoading,
-      isError,
-      lastFetchTime,
-      refetchConfig,
-      websiteUrl,
-      popupState: {
-        showPopup,
-        popupModalData,
-        dismissPopup,
-        handleBuyMeACoffee,
-      },
-    }),
-    [data, isLoading, isError, lastFetchTime, refetchConfig, websiteUrl, showPopup, popupModalData, dismissPopup, handleBuyMeACoffee]
-  );
+      reminders: {},
+    },
+    isLoading,
+    isError,
+    lastFetchTime,
+    refetchConfig,
+    websiteUrl,
+    popupState: {
+      showPopup,
+      popupModalData,
+      dismissPopup,
+      handleBuyMeACoffee,
+    },
+  };
 });
 
 
