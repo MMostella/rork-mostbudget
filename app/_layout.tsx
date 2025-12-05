@@ -13,7 +13,9 @@ SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient();
 
-function PopupModal() {
+
+
+function RootLayoutNav() {
   const { popupState } = useAppConfig();
   const {
     showPopup,
@@ -22,55 +24,6 @@ function PopupModal() {
     handleBuyMeACoffee,
   } = popupState;
 
-  if (!showPopup || !popupModalData) return null;
-
-  const { popupData, shouldShowButton } = popupModalData;
-
-  return (
-    <Modal
-      visible={showPopup}
-      transparent
-      animationType="fade"
-      onRequestClose={dismissPopup}
-    >
-      <View style={popupStyles.overlay}>
-        <View style={popupStyles.modal}>
-          <ScrollView
-            style={popupStyles.scrollView}
-            contentContainerStyle={popupStyles.scrollContent}
-            showsVerticalScrollIndicator={true}
-          >
-            <Text style={popupStyles.title}>{popupData.title}</Text>
-            <Text style={popupStyles.body}>{popupData.body}</Text>
-            <Text style={popupStyles.support}>{popupData.support}</Text>
-          </ScrollView>
-
-          <View style={popupStyles.buttonContainer}>
-            {shouldShowButton && (
-              <Pressable
-                style={popupStyles.coffeeButton}
-                onPress={handleBuyMeACoffee}
-              >
-                <Text style={popupStyles.coffeeButtonText}>☕ Buy Me a Coffee</Text>
-              </Pressable>
-            )}
-
-            <Pressable
-              style={popupStyles.dismissButton}
-              onPress={dismissPopup}
-            >
-              <Text style={popupStyles.dismissButtonText}>
-                Close
-              </Text>
-            </Pressable>
-          </View>
-        </View>
-      </View>
-    </Modal>
-  );
-}
-
-function RootLayoutNav() {
   return (
     <>
       <Stack screenOptions={{ headerBackTitle: "Back" }}>
@@ -90,7 +43,48 @@ function RootLayoutNav() {
           }}
         />
       </Stack>
-      <PopupModal />
+      {showPopup && popupModalData && (
+        <Modal
+          visible={showPopup}
+          transparent
+          animationType="fade"
+          onRequestClose={dismissPopup}
+        >
+          <View style={popupStyles.overlay}>
+            <View style={popupStyles.modal}>
+              <ScrollView
+                style={popupStyles.scrollView}
+                contentContainerStyle={popupStyles.scrollContent}
+                showsVerticalScrollIndicator={true}
+              >
+                <Text style={popupStyles.title}>{popupModalData.popupData.title}</Text>
+                <Text style={popupStyles.body}>{popupModalData.popupData.body}</Text>
+                <Text style={popupStyles.support}>{popupModalData.popupData.support}</Text>
+              </ScrollView>
+
+              <View style={popupStyles.buttonContainer}>
+                {popupModalData.shouldShowButton && (
+                  <Pressable
+                    style={popupStyles.coffeeButton}
+                    onPress={handleBuyMeACoffee}
+                  >
+                    <Text style={popupStyles.coffeeButtonText}>☕ Buy Me a Coffee</Text>
+                  </Pressable>
+                )}
+
+                <Pressable
+                  style={popupStyles.dismissButton}
+                  onPress={dismissPopup}
+                >
+                  <Text style={popupStyles.dismissButtonText}>
+                    Close
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      )}
     </>
   );
 }
