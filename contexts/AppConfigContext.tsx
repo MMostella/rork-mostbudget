@@ -2,8 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
 import { useQuery } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, View, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
-import Colors from '@/constants/colors';
+import { Alert, Linking, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 
 export type AppConfig = {
   data: {
@@ -202,8 +201,8 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
     }
   }, [hasScrolledToBottom]);
 
-  const PopupModal = useCallback(() => {
-    if (!showPopup || !data?.popups) return null;
+  const popupModalData = useMemo(() => {
+    if (!data?.popups) return null;
 
     const popupData = data.popups.popup || data.popups;
     
@@ -216,66 +215,12 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
       urlBuyMeACoffee = data.main.data.urlBuyMeACoffee as string;
     }
 
-    const shouldShowButton = popupData.link === true && urlBuyMeACoffee;
-
-    console.log('Popup modal rendering:', {
-      link: popupData.link,
-      shouldShowButton,
+    return {
+      popupData,
       urlBuyMeACoffee,
-      hasScrolledToBottom,
-    });
-
-    return (
-      <Modal
-        visible={showPopup}
-        transparent
-        animationType="fade"
-        onRequestClose={dismissPopup}
-      >
-        <View style={popupStyles.overlay}>
-          <View style={popupStyles.modal}>
-            <ScrollView 
-              style={popupStyles.scrollView}
-              contentContainerStyle={popupStyles.scrollContent}
-              onScroll={handleScroll}
-              scrollEventThrottle={16}
-              showsVerticalScrollIndicator={true}
-            >
-              <Text style={popupStyles.title}>{popupData.title}</Text>
-              <Text style={popupStyles.body}>{popupData.body}</Text>
-              <Text style={popupStyles.support}>{popupData.support}</Text>
-            </ScrollView>
-
-            <View style={popupStyles.buttonContainer}>
-              {shouldShowButton && (
-                <Pressable
-                  style={popupStyles.coffeeButton}
-                  onPress={handleBuyMeACoffee}
-                >
-                  <Text style={popupStyles.coffeeButtonText}>☕ Buy Me a Coffee</Text>
-                </Pressable>
-              )}
-
-              <Pressable
-                style={[
-                  popupStyles.dismissButton,
-                  !hasScrolledToBottom && popupStyles.dismissButtonDisabled
-                ]}
-                onPress={dismissPopup}
-              >
-                <Text style={[
-                  popupStyles.dismissButtonText,
-                  !hasScrolledToBottom && popupStyles.dismissButtonTextDisabled
-                ]}>
-                  {hasScrolledToBottom ? 'Close' : 'Scroll to Close'}
-                </Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
-    );
-  }, [showPopup, data, dismissPopup, handleBuyMeACoffee, hasScrolledToBottom, handleScroll]);
+      shouldShowButton: popupData.link === true && !!urlBuyMeACoffee,
+    };
+  }, [data]);
 
   return useMemo(
     () => ({
@@ -311,92 +256,17 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
       isError,
       lastFetchTime,
       refetchConfig,
-      PopupModal,
+      popupState: {
+        showPopup,
+        popupModalData,
+        dismissPopup,
+        handleBuyMeACoffee,
+        hasScrolledToBottom,
+        handleScroll,
+      },
     }),
-    [data, isLoading, isError, lastFetchTime, refetchConfig, PopupModal]
+    [data, isLoading, isError, lastFetchTime, refetchConfig, showPopup, popupModalData, dismissPopup, handleBuyMeACoffee, hasScrolledToBottom, handleScroll]
   );
 });
 
-const popupStyles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  modal: {
-    backgroundColor: Colors.light.cardBackground,
-    borderRadius: 24,
-    padding: 28,
-    width: '100%',
-    maxWidth: 400,
-    maxHeight: '80%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 10,
-  },
-  scrollView: {
-    maxHeight: 400,
-  },
-  scrollContent: {
-    paddingBottom: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '700' as const,
-    color: Colors.light.text,
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  body: {
-    fontSize: 16,
-    color: Colors.light.text,
-    lineHeight: 24,
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  support: {
-    fontSize: 14,
-    color: Colors.light.textSecondary,
-    lineHeight: 20,
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-  buttonContainer: {
-    gap: 12,
-    marginTop: 16,
-  },
-  coffeeButton: {
-    backgroundColor: Colors.light.tint,
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-  },
-  coffeeButtonText: {
-    fontSize: 16,
-    fontWeight: '600' as const,
-    color: '#FFFFFF',
-  },
-  dismissButton: {
-    backgroundColor: Colors.light.background,
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-  },
-  dismissButtonDisabled: {
-    opacity: 0.5,
-  },
-  dismissButtonText: {
-    fontSize: 16,
-    fontWeight: '600' as const,
-    color: Colors.light.text,
-  },
-  dismissButtonTextDisabled: {
-    color: Colors.light.textSecondary,
-  },
-});
+
