@@ -141,7 +141,7 @@ export default function DangerZoneScreen() {
           <View style={styles.settingCard}>
             <Text style={styles.settingLabel}>Current Version</Text>
             <Pressable onPress={handleVersionPress}>
-              <Text style={styles.versionText}>{config.appVersion}</Text>
+              <Text style={styles.versionText}>{config.currentAppVersion || config.appVersion || '1.0.0'}</Text>
             </Pressable>
             {showDebugOption && (
               <Pressable
