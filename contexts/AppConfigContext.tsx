@@ -104,10 +104,6 @@ const fetchAllConfigs = async (): Promise<AllConfigs> => {
 };
 
 export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
-  const [lastFetchTime, setLastFetchTime] = useState<Date | null>(null);
-  const [showPopup, setShowPopup] = useState(false);
-  const [popupDismissed, setPopupDismissed] = useState(false);
-
   const configQuery = useQuery({
     queryKey: ['appConfig'],
     queryFn: fetchAllConfigs,
@@ -116,6 +112,10 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
   });
 
   const { data, isLoading, isError, refetch } = configQuery;
+
+  const [lastFetchTime, setLastFetchTime] = useState<Date | null>(null);
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupDismissed, setPopupDismissed] = useState(false);
 
   const checkForNewPopup = useCallback(async () => {
     if (!data?.popups || popupDismissed) return;
