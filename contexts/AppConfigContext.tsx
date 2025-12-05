@@ -153,13 +153,19 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
   }, [data?.popups]);
 
   const websiteUrl = useMemo(() => {
+    console.log('websiteUrl computation - full data.main:', JSON.stringify(data?.main, null, 2));
+    
     if (data?.main?.main?.data) {
+      console.log('Found data.main.main.data structure');
       const dataArray = data.main.main.data;
       const urlWebsiteItem = dataArray.find((item: any) => item.key === 'urlWebsite');
+      console.log('urlWebsiteItem:', urlWebsiteItem);
       return urlWebsiteItem?.value || 'https://mostbudget.my.canva.site/info';
     } else if (data?.main?.data?.urlWebsite) {
+      console.log('Found data.main.data.urlWebsite:', data.main.data.urlWebsite);
       return data.main.data.urlWebsite as string;
     }
+    console.log('Using fallback URL');
     return 'https://mostbudget.my.canva.site/info';
   }, [data?.main]);
 
