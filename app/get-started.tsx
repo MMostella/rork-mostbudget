@@ -69,7 +69,7 @@ export default function GetStartedScreen() {
         <View style={styles.footer}>
           <Text style={styles.footerTitle}>🌐 Useful Links</Text>
           <Text style={styles.footerText}>
-            You can find the Privacy Policy, iOS download link, and ways to support the developer at:
+            You can find the Privacy Policy, iOS download Link, Social Links, and ways to support the developer at:
           </Text>
           <TouchableOpacity 
             onPress={() => Linking.openURL(websiteUrl)}
