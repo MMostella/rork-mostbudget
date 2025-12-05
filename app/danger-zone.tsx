@@ -143,7 +143,7 @@ export default function DangerZoneScreen() {
             <Pressable onPress={handleVersionPress}>
               <Text style={styles.versionText}>{(() => {
                 console.log('Full config structure:', JSON.stringify(config, null, 2));
-                const mainData = config?.main?.data;
+                const mainData = config?.data;
                 console.log('mainData:', mainData);
                 console.log('Is mainData array?', Array.isArray(mainData));
                 
@@ -152,7 +152,7 @@ export default function DangerZoneScreen() {
                   console.log('Found version item:', versionItem);
                   return versionItem?.value || '1.0.0';
                 }
-                return config?.data?.currentAppVersion || config?.data?.appVersion || '1.0.0';
+                return mainData?.currentAppVersion || mainData?.appVersion || '1.0.0';
               })()}</Text>
             </Pressable>
             {showDebugOption && (
