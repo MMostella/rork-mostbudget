@@ -20,12 +20,19 @@ export type AppConfig = {
 };
 
 export type PopupConfig = {
-  messageVersion: string;
-  title: string;
-  body: string;
-  support: string;
-  link: boolean;
-  [key: string]: string | number | boolean;
+  messageVersion?: string;
+  title?: string;
+  body?: string;
+  support?: string;
+  link?: boolean;
+  popup?: {
+    messageVersion: string;
+    title: string;
+    body: string;
+    support: string;
+    link: boolean;
+  };
+  [key: string]: string | number | boolean | undefined | { [key: string]: string | number | boolean };
 };
 
 export type ReminderConfig = {
@@ -116,7 +123,7 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
 
     try {
       const lastVersion = await AsyncStorage.getItem(LAST_POPUP_VERSION_KEY);
-      const currentVersion = data.popups.messageVersion;
+      const currentVersion = (data.popups.popup?.messageVersion || data.popups.messageVersion) as string | undefined;
 
       console.log('Popup version check:', { lastVersion, currentVersion });
 
@@ -139,11 +146,12 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
   const dismissPopup = useCallback(async () => {
     setShowPopup(false);
     setPopupDismissed(true);
-    if (data?.popups?.messageVersion) {
-      await AsyncStorage.setItem(LAST_POPUP_VERSION_KEY, data.popups.messageVersion);
-      console.log('Popup dismissed, saved version:', data.popups.messageVersion);
+    const messageVersion = (data?.popups?.popup?.messageVersion || data?.popups?.messageVersion) as string | undefined;
+    if (messageVersion) {
+      await AsyncStorage.setItem(LAST_POPUP_VERSION_KEY, messageVersion);
+      console.log('Popup dismissed, saved version:', messageVersion);
     }
-  }, [data?.popups?.messageVersion]);
+  }, [data?.popups]);
 
   const handleBuyMeACoffee = useCallback(async () => {
     const url = data?.main?.data?.urlBuyMeACoffee as string | undefined;
@@ -168,6 +176,8 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
   const PopupModal = useCallback(() => {
     if (!showPopup || !data?.popups) return null;
 
+    const popupData = data.popups.popup || data.popups;
+
     return (
       <Modal
         visible={showPopup}
@@ -177,12 +187,12 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
       >
         <View style={popupStyles.overlay}>
           <View style={popupStyles.modal}>
-            <Text style={popupStyles.title}>{data.popups.title}</Text>
-            <Text style={popupStyles.body}>{data.popups.body}</Text>
-            <Text style={popupStyles.support}>{data.popups.support}</Text>
+            <Text style={popupStyles.title}>{popupData.title}</Text>
+            <Text style={popupStyles.body}>{popupData.body}</Text>
+            <Text style={popupStyles.support}>{popupData.support}</Text>
 
             <View style={popupStyles.buttonContainer}>
-              {data.popups.link && data.main?.data?.urlBuyMeACoffee && (
+              {popupData.link && data.main?.data?.urlBuyMeACoffee && (
                 <Pressable
                   style={popupStyles.coffeeButton}
                   onPress={handleBuyMeACoffee}
