@@ -28,7 +28,7 @@ export default function GetStartedScreen() {
           <Text style={styles.stepNumber}>1️⃣ Go to the Settings Tab</Text>
           <Text style={styles.stepText}>This is your starting point.</Text>
           <Text style={styles.stepText}>Add your income sources and monthly expenses</Text>
-          <Text style={styles.stepText}>Add household members (optional)</Text>
+          <Text style={styles.stepText}>Add household members</Text>
           <Text style={styles.stepText}>Enable Tithing (optional)</Text>
           <Text style={styles.stepText}>This builds the foundation of your budget.</Text>
         </View>
@@ -59,7 +59,7 @@ export default function GetStartedScreen() {
         <View style={styles.step}>
           <Text style={styles.stepNumber}>4️⃣ Track Your Bills</Text>
           <Text style={styles.stepText}>
-            Visit the Bills tab to mark bills as paid and monitor upcoming due dates.
+            After logging your paycheck, use the checkbox to the left of each bill to acknowledge it was paid. This will automatically help MostBudget keep track of your bills; remaining or complete.
           </Text>
           <Text style={styles.stepText}>
             This helps ensure everything gets paid on time — with less stress.
@@ -78,10 +78,10 @@ export default function GetStartedScreen() {
             <Text style={styles.linkText}>MostBudget Website</Text>
           </TouchableOpacity>
           <Text style={styles.footerText}>
-            If you find MostBudget helpful, support is always appreciated ❤️
+            Thank you for supporting this solo-built app! ❤️
           </Text>
           <Text style={styles.footerText}>
-            Even small contributions help keep the app improving and available for everyone.
+            All contributions and feedback help keep the app improving and available for everyone.
           </Text>
         </View>
       </ScrollView>
