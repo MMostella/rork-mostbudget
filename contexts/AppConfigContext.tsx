@@ -1,7 +1,7 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import createContextHook from '@nkzw/create-context-hook';
-import { useQuery } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useQuery } from '@tanstack/react-query';
+import createContextHook from '@nkzw/create-context-hook';
 import { Linking } from 'react-native';
 
 export type AppConfig = {
@@ -105,17 +105,15 @@ const fetchAllConfigs = async (): Promise<AllConfigs> => {
 
 export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
   const [lastFetchTime, setLastFetchTime] = useState<Date | null>(null);
-  const [showPopup, setShowPopup] = useState(false);
-  const [popupDismissed, setPopupDismissed] = useState(false);
+  const [showPopup, setShowPopup] = useState<boolean>(false);
+  const [popupDismissed, setPopupDismissed] = useState<boolean>(false);
 
-  const configQuery = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['appConfig'],
     queryFn: fetchAllConfigs,
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
   });
-
-  const { data, isLoading, isError, refetch } = configQuery;
 
   const checkForNewPopup = useCallback(async () => {
     if (!data?.popups || popupDismissed) return;
