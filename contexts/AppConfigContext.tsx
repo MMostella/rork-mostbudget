@@ -177,6 +177,13 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
     if (!showPopup || !data?.popups) return null;
 
     const popupData = data.popups.popup || data.popups;
+    const shouldShowButton = popupData.link === true && data.main?.data?.urlBuyMeACoffee;
+
+    console.log('Popup modal rendering:', {
+      link: popupData.link,
+      shouldShowButton,
+      urlBuyMeACoffee: data.main?.data?.urlBuyMeACoffee,
+    });
 
     return (
       <Modal
@@ -192,7 +199,7 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
             <Text style={popupStyles.support}>{popupData.support}</Text>
 
             <View style={popupStyles.buttonContainer}>
-              {popupData.link && data.main?.data?.urlBuyMeACoffee && (
+              {shouldShowButton && (
                 <Pressable
                   style={popupStyles.coffeeButton}
                   onPress={handleBuyMeACoffee}
