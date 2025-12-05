@@ -155,13 +155,7 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
   const websiteUrl = useMemo(() => {
     console.log('websiteUrl computation - full data.main:', JSON.stringify(data?.main, null, 2));
     
-    if (data?.main?.main?.data) {
-      console.log('Found data.main.main.data structure');
-      const dataArray = data.main.main.data;
-      const urlWebsiteItem = dataArray.find((item: any) => item.key === 'urlWebsite');
-      console.log('urlWebsiteItem:', urlWebsiteItem);
-      return urlWebsiteItem?.value || 'https://mostbudget.my.canva.site/info';
-    } else if (data?.main?.data?.urlWebsite) {
+    if (data?.main?.data?.urlWebsite) {
       console.log('Found data.main.data.urlWebsite:', data.main.data.urlWebsite);
       return data.main.data.urlWebsite as string;
     }
@@ -170,15 +164,7 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
   }, [data?.main]);
 
   const handleBuyMeACoffee = useCallback(async () => {
-    let url: string | undefined;
-    
-    if (data?.main?.main?.data) {
-      const dataArray = data.main.main.data;
-      const urlBuyMeACoffeeItem = dataArray.find((item: any) => item.key === 'urlBuyMeACoffee');
-      url = urlBuyMeACoffeeItem?.value;
-    } else if (data?.main?.data?.urlBuyMeACoffee) {
-      url = data.main.data.urlBuyMeACoffee as string;
-    }
+    const url = data?.main?.data?.urlBuyMeACoffee as string | undefined;
 
     console.log('Buy Me a Coffee URL:', url);
 
@@ -206,15 +192,7 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
     if (!data?.popups) return null;
 
     const popupData = data.popups.popup || data.popups;
-    
-    let urlBuyMeACoffee: string | undefined;
-    if (data?.main?.main?.data) {
-      const dataArray = data.main.main.data;
-      const urlBuyMeACoffeeItem = dataArray.find((item: any) => item.key === 'urlBuyMeACoffee');
-      urlBuyMeACoffee = urlBuyMeACoffeeItem?.value;
-    } else if (data?.main?.data?.urlBuyMeACoffee) {
-      urlBuyMeACoffee = data.main.data.urlBuyMeACoffee as string;
-    }
+    const urlBuyMeACoffee = data?.main?.data?.urlBuyMeACoffee as string | undefined;
 
     console.log('Popup modal data:', { popupData, urlBuyMeACoffee, linkField: popupData.link });
 
