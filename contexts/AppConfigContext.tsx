@@ -115,6 +115,26 @@ export const [AppConfigProvider, useAppConfig] = createContextHook(() => {
     gcTime: 30 * 60 * 1000,
     retry: 1,
     retryDelay: 1000,
+    placeholderData: {
+      main: {
+        data: [
+          { key: 'appVersion', value: '1.0.0', type: 'string', lastUpdated: '', description: '' },
+          { key: 'spendingPercentDefault', value: 60, type: 'number', lastUpdated: '', description: '' },
+          { key: 'savingPercentDefault', value: 40, type: 'number', lastUpdated: '', description: '' },
+          { key: 'featureTithes', value: true, type: 'boolean', lastUpdated: '', description: '' },
+          { key: 'appLogoURL', value: 'https://rork.app/pa/6g6ixd11m2bjzy28nn7jh/logo', type: 'string', lastUpdated: '', description: '' },
+          { key: 'urlWebsite', value: 'https://mostbudget.my.canva.site/info', type: 'string', lastUpdated: '', description: '' },
+        ],
+      } as any,
+      popups: {
+        messageVersion: '0',
+        title: '',
+        body: '',
+        support: '',
+        link: false,
+      },
+      reminders: {},
+    } as AllConfigs,
   });
 
   const checkForNewPopup = useCallback(async () => {
