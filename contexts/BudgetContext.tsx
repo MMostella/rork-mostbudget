@@ -262,14 +262,14 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
     }
   };
 
-  const savePayments = async (newPayments: Payment[]) => {
+  const savePayments = useCallback(async (newPayments: Payment[]) => {
     try {
       await AsyncStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(newPayments));
       setPayments(newPayments);
     } catch (error) {
       console.error('Error saving payments:', error);
     }
-  };
+  }, []);
 
   const saveBillMonthStates = async (newStates: BillMonthState[]) => {
     try {
@@ -328,7 +328,7 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
       
       await saveExpenses(updatedExpenses);
     }
-  }, [payments, expenses, ensureMonthStateExists]);
+  }, [payments, expenses, ensureMonthStateExists, savePayments]);
 
   const addPaycheck = useCallback((newPaycheck: Paycheck) => {
     const updated = [...paychecks, newPaycheck];
@@ -364,17 +364,20 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
     }
   }, [paychecks, expenses, recordPayment]);
 
-  const deletePaycheck = useCallback((id: string) => {
+  const deletePaycheck = useCallback(async (id: string) => {
     const paycheckToDelete = paychecks.find((item) => item.id === id);
     const updated = paychecks.filter((item) => item.id !== id);
-    savePaychecks(updated);
+    await savePaychecks(updated);
+    
+    const updatedPayments = payments.filter((payment) => payment.paycheckId !== id);
+    await savePayments(updatedPayments);
     
     if (paycheckToDelete) {
       const newSpending = Math.max(0, currentSpendingTotal - (paycheckToDelete.spendingAmount ?? 0));
       const newSavings = Math.max(0, currentSavingsTotal - (paycheckToDelete.savingsAmount ?? 0));
       updateSpendingSavingsTotals(newSpending, newSavings);
     }
-  }, [paychecks, currentSpendingTotal, currentSavingsTotal, updateSpendingSavingsTotals]);
+  }, [paychecks, payments, currentSpendingTotal, currentSavingsTotal, updateSpendingSavingsTotals, savePayments]);
 
   const calculateMonthlyIncome = useCallback((): number => {
     return income.reduce((total, item) => {
@@ -652,7 +655,7 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
     } catch (error) {
       console.error('Error archiving and resetting monthly data:', error);
     }
-  }, [expenses, payments, archives]);
+  }, [expenses, payments, archives, savePayments]);
 
   const checkAndResetMonthly = useCallback(async () => {
     const now = new Date();
