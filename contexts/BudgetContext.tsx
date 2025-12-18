@@ -354,15 +354,26 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
         if (newChecked[expenseId] && !oldChecked[expenseId]) {
           const expense = expenses.find(e => e.id === expenseId);
           if (expense && expenseId !== 'tithe') {
-            const adjustedAmount = getAdjustedExpenseAmount(expense.amount, oldPaycheck.frequency);
+            const oneTimeExpense = oldPaycheck.oneTimeExpenses?.find(ote => ote.id === expenseId && ote.isEdited);
+            const adjustedAmount = oneTimeExpense ? oneTimeExpense.amount : getAdjustedExpenseAmount(expense.amount, oldPaycheck.frequency);
             await recordPayment(expenseId, adjustedAmount, id, oldPaycheck.monthYear);
           } else if (expenseId === 'tithe' && oldPaycheck.titheAmount) {
             console.log('Tithe marked as paid');
           }
+        } else if (!newChecked[expenseId] && oldChecked[expenseId]) {
+          const updatedPayments = payments.filter(p => !(p.paycheckId === id && p.expenseId === expenseId));
+          await savePayments(updatedPayments);
+        }
+      }
+      
+      for (const expenseId in oldChecked) {
+        if (oldChecked[expenseId] && !newChecked[expenseId]) {
+          const updatedPayments = payments.filter(p => !(p.paycheckId === id && p.expenseId === expenseId));
+          await savePayments(updatedPayments);
         }
       }
     }
-  }, [paychecks, expenses, recordPayment]);
+  }, [paychecks, expenses, recordPayment, payments, savePayments]);
 
   const deletePaycheck = useCallback(async (id: string) => {
     const paycheckToDelete = paychecks.find((item) => item.id === id);
