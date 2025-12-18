@@ -606,12 +606,12 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
       return { status: 'unpaid' as const, amountPaid: 0, amountDue: expense.amount, percentPaid: 0 };
     }
     
-    const hasAnyCheckedExpenses = paychecksForMonth.some(p => {
+    const isExpenseCheckedInAnyPaycheck = paychecksForMonth.some(p => {
       const checked = (p as any).checkedExpenses || {};
-      return Object.values(checked).some(v => v === true);
+      return checked[expenseId] === true;
     });
     
-    if (!hasAnyCheckedExpenses) {
+    if (!isExpenseCheckedInAnyPaycheck) {
       return { status: 'unpaid' as const, amountPaid: 0, amountDue: expense.amount, percentPaid: 0 };
     }
     
@@ -638,17 +638,9 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
     const targetMonthYear = monthYear || getCurrentMonthYear();
     const totalBills = expenses.reduce((sum, exp) => sum + exp.amount, 0);
     
-    const paychecksForMonth = paychecks.filter(p => p.monthYear === targetMonthYear);
-    const hasAnyCheckedExpenses = paychecksForMonth.some(p => {
-      const checked = (p as any).checkedExpenses || {};
-      return Object.values(checked).some(v => v === true);
-    });
-    
-    const totalPaid = hasAnyCheckedExpenses
-      ? payments
-          .filter(p => p.monthYear === targetMonthYear)
-          .reduce((sum, p) => sum + p.amount, 0)
-      : 0;
+    const totalPaid = payments
+      .filter(p => p.monthYear === targetMonthYear)
+      .reduce((sum, p) => sum + p.amount, 0);
     const totalRemaining = Math.max(0, totalBills - totalPaid);
     
     return {
@@ -656,7 +648,7 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
       totalPaid,
       totalRemaining,
     };
-  }, [expenses, payments, paychecks]);
+  }, [expenses, payments]);
 
   const archiveAndResetMonth = useCallback(async (currentMonth: string) => {
     try {
