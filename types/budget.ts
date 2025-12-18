@@ -82,6 +82,12 @@ export type Payment = {
   amount: number;
   date: string;
   paycheckId: string;
+  monthYear: string;
+};
+
+export type BillMonthState = {
+  monthYear: string;
+  payments: Payment[];
 };
 
 export type MonthlyArchive = {

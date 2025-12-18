@@ -1,10 +1,12 @@
 import Colors from '@/constants/colors';
 import { useBudget } from '@/contexts/BudgetContext';
-import { CheckCircle2, Circle, Receipt } from 'lucide-react-native';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { CheckCircle2, Circle, Receipt, ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { useState } from 'react';
+import { ScrollView, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 
 export default function BillsScreen() {
-  const { expenses, getExpensePaymentStatus, getBillsSummary, getBudgetSummary, isLoading } = useBudget();
+  const { expenses, getExpensePaymentStatus, getBillsSummary, getBudgetSummary, isLoading, getCurrentMonthYear } = useBudget();
+  const [selectedMonthYear, setSelectedMonthYear] = useState<string>(getCurrentMonthYear());
 
   if (isLoading) {
     return (
@@ -14,7 +16,35 @@ export default function BillsScreen() {
     );
   }
 
-  const billsSummary = getBillsSummary();
+  const getMonthYearDisplay = (monthYear: string) => {
+    const [year, month] = monthYear.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1);
+    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  };
+
+  const goToPreviousMonth = () => {
+    const [year, month] = selectedMonthYear.split('-').map(Number);
+    const date = new Date(year, month - 1);
+    date.setMonth(date.getMonth() - 1);
+    const newMonthYear = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    setSelectedMonthYear(newMonthYear);
+  };
+
+  const goToNextMonth = () => {
+    const [year, month] = selectedMonthYear.split('-').map(Number);
+    const date = new Date(year, month - 1);
+    date.setMonth(date.getMonth() + 1);
+    const newMonthYear = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    setSelectedMonthYear(newMonthYear);
+  };
+
+  const goToCurrentMonth = () => {
+    setSelectedMonthYear(getCurrentMonthYear());
+  };
+
+  const isCurrentMonth = selectedMonthYear === getCurrentMonthYear();
+
+  const billsSummary = getBillsSummary(selectedMonthYear);
   const budgetSummary = getBudgetSummary();
   const remainingBalance = budgetSummary.totalIncome - billsSummary.totalPaid;
 
@@ -22,6 +52,22 @@ export default function BillsScreen() {
 
   return (
     <View style={styles.container}>
+      <View style={styles.monthNavigationContainer}>
+        <TouchableOpacity onPress={goToPreviousMonth} style={styles.monthNavButton}>
+          <ChevronLeft size={24} color={Colors.light.primary} />
+        </TouchableOpacity>
+        <View style={styles.monthDisplayContainer}>
+          <Text style={styles.monthDisplayText}>{getMonthYearDisplay(selectedMonthYear)}</Text>
+          {!isCurrentMonth && (
+            <TouchableOpacity onPress={goToCurrentMonth} style={styles.currentMonthButton}>
+              <Text style={styles.currentMonthText}>Go to Current</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+        <TouchableOpacity onPress={goToNextMonth} style={styles.monthNavButton}>
+          <ChevronRight size={24} color={Colors.light.primary} />
+        </TouchableOpacity>
+      </View>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.summarySection}>
           <View style={styles.summaryCard}>
@@ -90,7 +136,7 @@ export default function BillsScreen() {
           ) : (
             <View style={styles.billsList}>
               {sortedExpenses.map((expense) => {
-                const paymentStatus = getExpensePaymentStatus(expense.id);
+                const paymentStatus = getExpensePaymentStatus(expense.id, selectedMonthYear);
                 const { status, amountPaid, amountDue, percentPaid } = paymentStatus;
 
                 let statusColor = Colors.light.textSecondary;
@@ -181,6 +227,42 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.light.background,
+  },
+  monthNavigationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: Colors.light.cardBackground,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.light.border,
+  },
+  monthNavButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+  },
+  monthDisplayContainer: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 4,
+  },
+  monthDisplayText: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: Colors.light.text,
+  },
+  currentMonthButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    backgroundColor: Colors.light.primary,
+  },
+  currentMonthText: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: '#FFFFFF',
   },
   loadingContainer: {
     flex: 1,

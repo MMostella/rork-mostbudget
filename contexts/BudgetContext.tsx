@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { BudgetSummary, BudgetPercentages, ExpenseItem, Income, Paycheck, AppSettings, DailyExpense, HouseholdMember, Payment, MonthlyArchive } from '@/types/budget';
+import type { BudgetSummary, BudgetPercentages, ExpenseItem, Income, Paycheck, AppSettings, DailyExpense, HouseholdMember, Payment, MonthlyArchive, BillMonthState } from '@/types/budget';
 
 const STORAGE_KEYS = {
   INCOME: '@budget_income',
@@ -16,6 +16,7 @@ const STORAGE_KEYS = {
   PAYMENTS: '@budget_payments',
   ARCHIVES: '@budget_archives',
   LAST_RESET_DATE: '@budget_last_reset_date',
+  BILL_MONTH_STATES: '@budget_bill_month_states',
 };
 
 const DEFAULT_INCOME_SOURCES: Income[] = [
@@ -71,17 +72,24 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
   const [currentSavingsTotal, setCurrentSavingsTotal] = useState(0);
   const [householdMembers, setHouseholdMembers] = useState<HouseholdMember[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [billMonthStates, setBillMonthStates] = useState<BillMonthState[]>([]);
   const [archives, setArchives] = useState<MonthlyArchive[]>([]);
   const [lastResetDate, setLastResetDate] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const getCurrentMonthYear = () => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  };
+
   useEffect(() => {
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadData = async () => {
     try {
-      const [incomeData, expensesData, paychecksData, percentagesData, settingsData, dailyExpensesData, spendingData, savingsData, householdData, paymentsData, archivesData, lastResetData] = await Promise.all([
+      const [incomeData, expensesData, paychecksData, percentagesData, settingsData, dailyExpensesData, spendingData, savingsData, householdData, paymentsData, archivesData, lastResetData, billMonthStatesData] = await Promise.all([
         AsyncStorage.getItem(STORAGE_KEYS.INCOME),
         AsyncStorage.getItem(STORAGE_KEYS.EXPENSES),
         AsyncStorage.getItem(STORAGE_KEYS.PAYCHECKS),
@@ -94,6 +102,7 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
         AsyncStorage.getItem(STORAGE_KEYS.PAYMENTS),
         AsyncStorage.getItem(STORAGE_KEYS.ARCHIVES),
         AsyncStorage.getItem(STORAGE_KEYS.LAST_RESET_DATE),
+        AsyncStorage.getItem(STORAGE_KEYS.BILL_MONTH_STATES),
       ]);
 
       if (incomeData) {
@@ -136,7 +145,15 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
         }
       }
       if (householdData) setHouseholdMembers(JSON.parse(householdData));
-      if (paymentsData) setPayments(JSON.parse(paymentsData));
+      if (paymentsData) {
+        const parsed = JSON.parse(paymentsData);
+        const migratedPayments = parsed.map((p: Payment) => ({
+          ...p,
+          monthYear: p.monthYear || getCurrentMonthYear(),
+        }));
+        setPayments(migratedPayments);
+      }
+      if (billMonthStatesData) setBillMonthStates(JSON.parse(billMonthStatesData));
       if (archivesData) setArchives(JSON.parse(archivesData));
       if (lastResetDate) setLastResetDate(lastResetData);
     } catch (error) {
@@ -254,13 +271,42 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
     }
   };
 
-  const recordPayment = useCallback(async (expenseId: string, amount: number, paycheckId: string) => {
+  const saveBillMonthStates = async (newStates: BillMonthState[]) => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEYS.BILL_MONTH_STATES, JSON.stringify(newStates));
+      setBillMonthStates(newStates);
+    } catch (error) {
+      console.error('Error saving bill month states:', error);
+    }
+  };
+
+  const getPaymentsForMonth = useCallback((monthYear: string): Payment[] => {
+    return payments.filter(p => p.monthYear === monthYear);
+  }, [payments]);
+
+  const ensureMonthStateExists = useCallback(async (monthYear: string) => {
+    const existingState = billMonthStates.find(s => s.monthYear === monthYear);
+    if (!existingState) {
+      const newState: BillMonthState = {
+        monthYear,
+        payments: [],
+      };
+      const updatedStates = [...billMonthStates, newState];
+      await saveBillMonthStates(updatedStates);
+    }
+  }, [billMonthStates]);
+
+  const recordPayment = useCallback(async (expenseId: string, amount: number, paycheckId: string, monthYear?: string) => {
+    const targetMonthYear = monthYear || getCurrentMonthYear();
+    await ensureMonthStateExists(targetMonthYear);
+    
     const newPayment: Payment = {
       id: Date.now().toString(),
       expenseId,
       amount,
       date: new Date().toISOString(),
       paycheckId,
+      monthYear: targetMonthYear,
     };
     
     const updatedPayments = [...payments, newPayment];
@@ -269,7 +315,7 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
     const expense = expenses.find(e => e.id === expenseId);
     if (expense) {
       const totalPaidForExpense = updatedPayments
-        .filter(p => p.expenseId === expenseId)
+        .filter(p => p.expenseId === expenseId && p.monthYear === targetMonthYear)
         .reduce((sum, p) => sum + p.amount, 0);
       
       const isPaid = totalPaidForExpense >= expense.amount;
@@ -282,7 +328,7 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
       
       await saveExpenses(updatedExpenses);
     }
-  }, [payments, expenses]);
+  }, [payments, expenses, ensureMonthStateExists]);
 
   const addPaycheck = useCallback((newPaycheck: Paycheck) => {
     const updated = [...paychecks, newPaycheck];
@@ -536,12 +582,13 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
     saveHouseholdMembers(updated);
   }, [householdMembers]);
 
-  const getExpensePaymentStatus = useCallback((expenseId: string) => {
+  const getExpensePaymentStatus = useCallback((expenseId: string, monthYear?: string) => {
+    const targetMonthYear = monthYear || getCurrentMonthYear();
     const expense = expenses.find(e => e.id === expenseId);
     if (!expense) return { status: 'unpaid' as const, amountPaid: 0, amountDue: 0, percentPaid: 0 };
     
     const totalPaid = payments
-      .filter(p => p.expenseId === expenseId)
+      .filter(p => p.expenseId === expenseId && p.monthYear === targetMonthYear)
       .reduce((sum, p) => sum + p.amount, 0);
     
     const amountDue = Math.max(0, expense.amount - totalPaid);
@@ -559,9 +606,12 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
     return { status, amountPaid: totalPaid, amountDue, percentPaid };
   }, [expenses, payments]);
 
-  const getBillsSummary = useCallback(() => {
+  const getBillsSummary = useCallback((monthYear?: string) => {
+    const targetMonthYear = monthYear || getCurrentMonthYear();
     const totalBills = expenses.reduce((sum, exp) => sum + exp.amount, 0);
-    const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
+    const totalPaid = payments
+      .filter(p => p.monthYear === targetMonthYear)
+      .reduce((sum, p) => sum + p.amount, 0);
     const totalRemaining = Math.max(0, totalBills - totalPaid);
     
     return {
@@ -633,6 +683,7 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
       currentSavingsTotal,
       householdMembers,
       payments,
+      billMonthStates,
       archives,
       maxIncomeLimit: MAX_INCOME_SOURCES,
       maxExpenseLimit: MAX_EXPENSES,
@@ -664,6 +715,8 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
       getExpensePaymentStatus,
       getBillsSummary,
       checkAndResetMonthly,
+      getPaymentsForMonth,
+      getCurrentMonthYear,
     }),
     [
       income,
@@ -676,6 +729,7 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
       currentSavingsTotal,
       householdMembers,
       payments,
+      billMonthStates,
       archives,
       addIncome,
       updateIncome,
@@ -705,6 +759,7 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
       getExpensePaymentStatus,
       getBillsSummary,
       checkAndResetMonthly,
+      getPaymentsForMonth,
     ]
   );
 });
