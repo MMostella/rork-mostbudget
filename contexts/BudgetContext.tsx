@@ -355,7 +355,7 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
           const expense = expenses.find(e => e.id === expenseId);
           if (expense && expenseId !== 'tithe') {
             const adjustedAmount = getAdjustedExpenseAmount(expense.amount, oldPaycheck.frequency);
-            await recordPayment(expenseId, adjustedAmount, id);
+            await recordPayment(expenseId, adjustedAmount, id, oldPaycheck.monthYear);
           } else if (expenseId === 'tithe' && oldPaycheck.titheAmount) {
             console.log('Tithe marked as paid');
           }
