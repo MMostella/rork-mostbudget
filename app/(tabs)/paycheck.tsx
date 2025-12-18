@@ -34,6 +34,7 @@ export default function PaycheckScreen() {
   const [showAddOneTimeExpense, setShowAddOneTimeExpense] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [dateInputText, setDateInputText] = useState('');
   const [editingPaycheckExpenseId, setEditingPaycheckExpenseId] = useState<string | null>(null);
   const [editPaycheckExpenseAmount, setEditPaycheckExpenseAmount] = useState('');
 
@@ -672,6 +673,7 @@ export default function PaycheckScreen() {
 
       <Pressable style={styles.fab} onPress={() => {
         setSelectedDate(new Date());
+        setDateInputText('');
         setModalVisible(true);
       }}>
         <Plus size={28} color="#FFFFFF" />
@@ -712,11 +714,13 @@ export default function PaycheckScreen() {
 
                 {showDatePicker && (
                   <View style={styles.datePickerContainer}>
+                    <Text style={styles.datePickerLabel}>Quick Select</Text>
                     <View style={styles.datePickerButtons}>
                       <Pressable
                         style={styles.datePresetButton}
                         onPress={() => {
                           setSelectedDate(new Date());
+                          setDateInputText('');
                           setShowDatePicker(false);
                         }}
                       >
@@ -728,6 +732,7 @@ export default function PaycheckScreen() {
                           const yesterday = new Date();
                           yesterday.setDate(yesterday.getDate() - 1);
                           setSelectedDate(yesterday);
+                          setDateInputText('');
                           setShowDatePicker(false);
                         }}
                       >
@@ -739,18 +744,67 @@ export default function PaycheckScreen() {
                           const lastWeek = new Date();
                           lastWeek.setDate(lastWeek.getDate() - 7);
                           setSelectedDate(lastWeek);
+                          setDateInputText('');
                           setShowDatePicker(false);
                         }}
                       >
                         <Text style={styles.datePresetButtonText}>Last Week</Text>
                       </Pressable>
                     </View>
-                    <Pressable
-                      style={styles.closeDatePickerButton}
-                      onPress={() => setShowDatePicker(false)}
-                    >
-                      <Text style={styles.closeDatePickerButtonText}>Close</Text>
-                    </Pressable>
+                    
+                    <Text style={styles.datePickerLabel}>Or Enter Date</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="MM/DD/YYYY"
+                      value={dateInputText}
+                      onChangeText={setDateInputText}
+                      keyboardType="numbers-and-punctuation"
+                    />
+                    
+                    <View style={styles.datePickerActions}>
+                      <Pressable
+                        style={styles.closeDatePickerButton}
+                        onPress={() => {
+                          setShowDatePicker(false);
+                          setDateInputText('');
+                        }}
+                      >
+                        <Text style={styles.closeDatePickerButtonText}>Cancel</Text>
+                      </Pressable>
+                      <Pressable
+                        style={styles.applyDateButton}
+                        onPress={() => {
+                          if (dateInputText.trim()) {
+                            const parts = dateInputText.trim().split('/');
+                            if (parts.length === 3) {
+                              const month = parseInt(parts[0], 10);
+                              const day = parseInt(parts[1], 10);
+                              const year = parseInt(parts[2], 10);
+                              
+                              if (!isNaN(month) && !isNaN(day) && !isNaN(year) && 
+                                  month >= 1 && month <= 12 && day >= 1 && day <= 31 && year >= 1900) {
+                                const newDate = new Date(year, month - 1, day);
+                                if (!isNaN(newDate.getTime())) {
+                                  setSelectedDate(newDate);
+                                  setDateInputText('');
+                                  setShowDatePicker(false);
+                                } else {
+                                  Alert.alert('Invalid Date', 'Please enter a valid date in MM/DD/YYYY format');
+                                }
+                              } else {
+                                Alert.alert('Invalid Date', 'Please enter a valid date in MM/DD/YYYY format');
+                              }
+                            } else {
+                              Alert.alert('Invalid Format', 'Please use MM/DD/YYYY format (e.g., 12/25/2024)');
+                            }
+                          } else {
+                            setShowDatePicker(false);
+                          }
+                        }}
+                      >
+                        <Text style={styles.applyDateButtonText}>Apply</Text>
+                      </Pressable>
+                    </View>
                   </View>
                 )}
 
@@ -1728,10 +1782,23 @@ const styles = StyleSheet.create({
     fontWeight: '600' as const,
     color: '#FFFFFF',
   },
+  datePickerLabel: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: Colors.light.text,
+    marginBottom: 8,
+    marginTop: 12,
+  },
+  datePickerActions: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 8,
+  },
   closeDatePickerButton: {
+    flex: 1,
     paddingVertical: 10,
     borderRadius: 8,
-    backgroundColor: Colors.light.cardBackground,
+    backgroundColor: Colors.light.background,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: Colors.light.border,
@@ -1740,6 +1807,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600' as const,
     color: Colors.light.text,
+  },
+  applyDateButton: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: Colors.light.tint,
+    alignItems: 'center',
+  },
+  applyDateButtonText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#FFFFFF',
   },
   editPaycheckExpenseCard: {
     backgroundColor: Colors.light.background,
