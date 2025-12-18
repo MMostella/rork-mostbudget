@@ -2,8 +2,8 @@ import Colors from '@/constants/colors';
 import { useBudget } from '@/contexts/BudgetContext';
 import type { OneTimeExpense, Paycheck } from '@/types/budget';
 import { EXPENSE_CATEGORIES } from '@/types/budget';
-import { CheckCircle2, Circle, DollarSign, Edit2, Plus, Trash2, X } from 'lucide-react-native';
-import { useRef, useState, useMemo } from 'react';
+import { CheckCircle2, Circle, DollarSign, Edit2, Plus, Trash2, X, Calendar } from 'lucide-react-native';
+import { useRef, useState, useMemo, useCallback } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -32,6 +32,10 @@ export default function PaycheckScreen() {
   const [editExpenseAmount, setEditExpenseAmount] = useState('');
   const [editExpenseCategory, setEditExpenseCategory] = useState<string>(EXPENSE_CATEGORIES[0]);
   const [showAddOneTimeExpense, setShowAddOneTimeExpense] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [editingPaycheckExpenseId, setEditingPaycheckExpenseId] = useState<string | null>(null);
+  const [editPaycheckExpenseAmount, setEditPaycheckExpenseAmount] = useState('');
 
   const amountInputRef = useRef<TextInput>(null);
 
@@ -87,11 +91,14 @@ export default function PaycheckScreen() {
       }
     }
 
+    const monthYear = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}`;
+
     const newPaycheck: Paycheck = {
       id: Date.now().toString(),
       amount: parsedAmount,
       frequency,
-      date: new Date().toISOString(),
+      date: selectedDate.toISOString(),
+      monthYear,
       paidExpenseIds: selectedExpenseIds,
       titheAmount: settings.titheEnabled ? titheAmount : undefined,
       savingsAmount,
@@ -110,6 +117,7 @@ export default function PaycheckScreen() {
     setAddRemainingToSavings(false);
     setOneTimeExpenses([]);
     setShowAddOneTimeExpense(false);
+    setSelectedDate(new Date());
     setModalVisible(false);
   };
 
@@ -298,7 +306,7 @@ export default function PaycheckScreen() {
 
   const filteredExpenses = getFilteredExpenses();
 
-  const getAdjustedExpenseAmountMemo = (expenseAmount: number): number => {
+  const getAdjustedExpenseAmountMemo = useCallback((expenseAmount: number): number => {
     switch (frequency) {
       case 'weekly':
         return expenseAmount / 4;
@@ -307,7 +315,7 @@ export default function PaycheckScreen() {
       case 'monthly':
         return expenseAmount;
     }
-  };
+  }, [frequency]);
 
   const selectedExpensesTotal = useMemo(() => {
     let total = 0;
@@ -327,7 +335,7 @@ export default function PaycheckScreen() {
       }
     });
     return total;
-  }, [filteredExpenses, selectedExpenseIds, oneTimeExpenses, frequency]);
+  }, [filteredExpenses, selectedExpenseIds, oneTimeExpenses, getAdjustedExpenseAmountMemo]);
 
   const calculatedPreview = useMemo(() => {
     if (!amount || parseFloat(amount) <= 0) {
@@ -510,34 +518,95 @@ export default function PaycheckScreen() {
                         const displayName = oneTimeEdit ? oneTimeEdit.name : exp.name;
                         
                         return (
-                          <View key={exp.id} style={styles.paidExpenseRow}>
-                            <View style={styles.paidExpenseCheckbox}>
-                              <Pressable
-                                onPress={() => {
-                                  const current = (paycheck as any).checkedExpenses || {};
-                                  updatePaycheck(paycheck.id, {
-                                    ...paycheck,
-                                    checkedExpenses: {
-                                      ...current,
-                                      [exp.id]: !current[exp.id],
-                                    },
-                                  });
-                                }}
-                              >
-                                {((paycheck as any).checkedExpenses?.[exp.id]) ? (
-                                  <CheckCircle2 size={18} color={Colors.light.success} />
-                                ) : (
-                                  <Circle size={18} color={Colors.light.textSecondary} />
-                                )}
-                              </Pressable>
-                            </View>
-                            <Text style={styles.paidExpenseName}>
-                              {displayName}
-                              {oneTimeEdit && <Text style={styles.editedLabel}> (edited)</Text>}
-                            </Text>
-                            <Text style={styles.paidExpenseAmount}>
-                              ${displayAmount.toFixed(2)}
-                            </Text>
+                          <View key={exp.id}>
+                            {editingPaycheckExpenseId === exp.id ? (
+                              <View style={styles.editPaycheckExpenseCard}>
+                                <TextInput
+                                  style={styles.input}
+                                  placeholder="Amount"
+                                  value={editPaycheckExpenseAmount}
+                                  onChangeText={setEditPaycheckExpenseAmount}
+                                  keyboardType="decimal-pad"
+                                  autoFocus
+                                />
+                                <View style={styles.editExpenseActions}>
+                                  <Pressable
+                                    style={styles.cancelEditButton}
+                                    onPress={() => {
+                                      setEditingPaycheckExpenseId(null);
+                                      setEditPaycheckExpenseAmount('');
+                                    }}
+                                  >
+                                    <Text style={styles.cancelEditButtonText}>Cancel</Text>
+                                  </Pressable>
+                                  <Pressable
+                                    style={styles.saveEditButton}
+                                    onPress={() => {
+                                      const newAmount = parseFloat(editPaycheckExpenseAmount);
+                                      if (!isNaN(newAmount) && newAmount > 0) {
+                                        const updatedOneTimeExpenses = oneTimeExpensesForPaycheck.filter(ote => ote.id !== exp.id);
+                                        updatedOneTimeExpenses.push({
+                                          id: exp.id,
+                                          name: displayName,
+                                          amount: newAmount,
+                                          category: exp.category,
+                                          isEdited: true,
+                                        });
+                                        updatePaycheck(paycheck.id, {
+                                          ...paycheck,
+                                          oneTimeExpenses: updatedOneTimeExpenses,
+                                        });
+                                        setEditingPaycheckExpenseId(null);
+                                        setEditPaycheckExpenseAmount('');
+                                      } else {
+                                        Alert.alert('Error', 'Please enter a valid amount');
+                                      }
+                                    }}
+                                  >
+                                    <Text style={styles.saveEditButtonText}>Save</Text>
+                                  </Pressable>
+                                </View>
+                              </View>
+                            ) : (
+                              <View style={styles.paidExpenseRow}>
+                                <View style={styles.paidExpenseCheckbox}>
+                                  <Pressable
+                                    onPress={() => {
+                                      const current = (paycheck as any).checkedExpenses || {};
+                                      updatePaycheck(paycheck.id, {
+                                        ...paycheck,
+                                        checkedExpenses: {
+                                          ...current,
+                                          [exp.id]: !current[exp.id],
+                                        },
+                                      });
+                                    }}
+                                  >
+                                    {((paycheck as any).checkedExpenses?.[exp.id]) ? (
+                                      <CheckCircle2 size={18} color={Colors.light.success} />
+                                    ) : (
+                                      <Circle size={18} color={Colors.light.textSecondary} />
+                                    )}
+                                  </Pressable>
+                                </View>
+                                <Text style={styles.paidExpenseName}>
+                                  {displayName}
+                                  {oneTimeEdit && <Text style={styles.editedLabel}> (edited)</Text>}
+                                </Text>
+                                <Text style={styles.paidExpenseAmount}>
+                                  ${displayAmount.toFixed(2)}
+                                </Text>
+                                <Pressable
+                                  style={styles.editIconButton}
+                                  onPress={() => {
+                                    setEditingPaycheckExpenseId(exp.id);
+                                    setEditPaycheckExpenseAmount(displayAmount.toString());
+                                  }}
+                                >
+                                  <Edit2 size={16} color={Colors.light.tint} />
+                                </Pressable>
+                              </View>
+                            )}
                           </View>
                         );
                       })}
@@ -601,7 +670,10 @@ export default function PaycheckScreen() {
         )}
       </ScrollView>
 
-      <Pressable style={styles.fab} onPress={() => setModalVisible(true)}>
+      <Pressable style={styles.fab} onPress={() => {
+        setSelectedDate(new Date());
+        setModalVisible(true);
+      }}>
         <Plus size={28} color="#FFFFFF" />
       </Pressable>
 
@@ -622,6 +694,65 @@ export default function PaycheckScreen() {
                 keyboardShouldPersistTaps="handled"
               >
                 <Text style={styles.modalTitle}>Log Paycheck</Text>
+
+                <Text style={styles.label}>Payment Date</Text>
+                <Pressable
+                  style={styles.datePickerButton}
+                  onPress={() => setShowDatePicker(!showDatePicker)}
+                >
+                  <Calendar size={20} color={Colors.light.tint} />
+                  <Text style={styles.datePickerButtonText}>
+                    {selectedDate.toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })}
+                  </Text>
+                </Pressable>
+
+                {showDatePicker && (
+                  <View style={styles.datePickerContainer}>
+                    <View style={styles.datePickerButtons}>
+                      <Pressable
+                        style={styles.datePresetButton}
+                        onPress={() => {
+                          setSelectedDate(new Date());
+                          setShowDatePicker(false);
+                        }}
+                      >
+                        <Text style={styles.datePresetButtonText}>Today</Text>
+                      </Pressable>
+                      <Pressable
+                        style={styles.datePresetButton}
+                        onPress={() => {
+                          const yesterday = new Date();
+                          yesterday.setDate(yesterday.getDate() - 1);
+                          setSelectedDate(yesterday);
+                          setShowDatePicker(false);
+                        }}
+                      >
+                        <Text style={styles.datePresetButtonText}>Yesterday</Text>
+                      </Pressable>
+                      <Pressable
+                        style={styles.datePresetButton}
+                        onPress={() => {
+                          const lastWeek = new Date();
+                          lastWeek.setDate(lastWeek.getDate() - 7);
+                          setSelectedDate(lastWeek);
+                          setShowDatePicker(false);
+                        }}
+                      >
+                        <Text style={styles.datePresetButtonText}>Last Week</Text>
+                      </Pressable>
+                    </View>
+                    <Pressable
+                      style={styles.closeDatePickerButton}
+                      onPress={() => setShowDatePicker(false)}
+                    >
+                      <Text style={styles.closeDatePickerButtonText}>Close</Text>
+                    </Pressable>
+                  </View>
+                )}
 
                 {income.length > 0 && (
                   <>
@@ -1554,5 +1685,68 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: Colors.light.success,
     fontStyle: 'italic' as const,
+  },
+  datePickerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.light.background,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+    gap: 12,
+    marginBottom: 12,
+  },
+  datePickerButtonText: {
+    fontSize: 16,
+    color: Colors.light.text,
+    fontWeight: '600' as const,
+  },
+  datePickerContainer: {
+    backgroundColor: Colors.light.background,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+  },
+  datePickerButtons: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 12,
+  },
+  datePresetButton: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: Colors.light.tint,
+    alignItems: 'center',
+  },
+  datePresetButtonText: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: '#FFFFFF',
+  },
+  closeDatePickerButton: {
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: Colors.light.cardBackground,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+  },
+  closeDatePickerButtonText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.light.text,
+  },
+  editPaycheckExpenseCard: {
+    backgroundColor: Colors.light.background,
+    borderRadius: 12,
+    padding: 12,
+    marginVertical: 4,
+    borderWidth: 2,
+    borderColor: Colors.light.tint,
   },
 });

@@ -39,6 +39,7 @@ export type Paycheck = {
   amount: number;
   frequency: 'weekly' | 'biweekly' | 'monthly';
   date: string;
+  monthYear?: string;
   paidExpenseIds: string[];
   titheAmount?: number;
   savingsAmount?: number;
