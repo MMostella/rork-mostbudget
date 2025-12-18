@@ -300,6 +300,15 @@ export const [BudgetProvider, useBudget] = createContextHook(() => {
     const targetMonthYear = monthYear || getCurrentMonthYear();
     await ensureMonthStateExists(targetMonthYear);
     
+    const existingPaymentIndex = payments.findIndex(
+      p => p.expenseId === expenseId && p.paycheckId === paycheckId && p.monthYear === targetMonthYear
+    );
+    
+    if (existingPaymentIndex !== -1) {
+      console.log('Payment already exists for this expense+paycheck, skipping duplicate');
+      return;
+    }
+    
     const newPayment: Payment = {
       id: Date.now().toString(),
       expenseId,
